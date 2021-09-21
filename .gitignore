@@ -1,0 +1,14 @@
+# python or editor folders
+.vscode
+.ipynb_checkpoints
+__pycache__
+
+# cpp
+build/
+
+# python
+tests
+
+# data
+outputs/
+
