@@ -1,7 +1,7 @@
 {
     "name": "pctut",
     "build": {
-        "dockerfile": "Dockerfile",
+        "dockerfile": "Dockerfile_cpu",
     },
     "extensions": [
         "ms-python.vscode-pylance",
