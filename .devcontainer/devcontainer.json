@@ -1,0 +1,13 @@
+{
+    "name": "pctut",
+    "build": {
+        "dockerfile": "Dockerfile",
+    },
+    "extensions": [
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "yzhang.markdown-all-in-one",
+        "obarads.vscode-pc-viewer"
+    ]
+}
