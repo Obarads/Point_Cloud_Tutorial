@@ -6,13 +6,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get upgrade -y
 
+### PCL (Point Cloud Library)
+RUN apt-get install -y libpcl-dev
+
 ## clean
 RUN apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-### PCL (Point Cloud Library)
-RUN apt-get install -y libpcl-dev
 
 # install python packages
 ## conda
