@@ -4,24 +4,23 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # install ubuntu package
 RUN apt-get update && \
-    apt-get upgrade -y
-
-### PCL (Point Cloud Library)
-RUN apt-get install -y libpcl-dev
+    apt-get upgrade -y && \
 
 ## clean
 RUN apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+### PCL (Point Cloud Library)
+RUN apt-get install -y libpcl-dev
 
 # install python packages
 ## conda
 RUN conda update -n base -c defaults conda
 
-## Create python 3.8
-RUN conda create python=3.8 -n pct_cpu
-RUN conda activate pct_cpu
+# Create python3.8 env
+RUN conda create python=3.8 -n pct_cpu -y
+SHELL ["conda", "run", "-n", "pct_cpu", "/bin/bash", "-c"]
 
 ## pytorch
 RUN conda install pytorch==1.9.1 torchvision torchaudio cpuonly -c pytorch
