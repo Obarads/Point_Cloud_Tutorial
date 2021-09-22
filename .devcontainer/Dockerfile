@@ -5,38 +5,39 @@ ENV DEBIAN_FRONTEND=noninteractive
 # install ubuntu package
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-    apt-utils \
-    build-essential \
-    cmake \
-    git \
-    curl \
-    vim \
-    gdb \
-    wget \
-    libeigen3-dev \
-    libgl1-mesa-dev \
-    libgl1-mesa-glx \
-    libglew-dev \
-    libglfw3-dev \
-    libglu1-mesa-dev \
-    libosmesa6-dev \
-    libpng-dev \
-    lxde \
-    mesa-utils \
-    ne \
-    python3 \
-    python3-dev \
-    python3-pip \
-    python3-tk \
-    python3-dbg \
-    pybind11-dev \
-    software-properties-common \
-    x11vnc \
-    xorg-dev \
-    xterm \
-    ninja-build \
-    xvfb
+    wget
+    # apt-get install -y --no-install-recommends \
+    # apt-utils \
+    # build-essential \
+    # cmake \
+    # git \
+    # curl \
+    # vim \
+    # gdb \
+    # wget \
+    # libeigen3-dev \
+    # libgl1-mesa-dev \
+    # libgl1-mesa-glx \
+    # libglew-dev \
+    # libglfw3-dev \
+    # libglu1-mesa-dev \
+    # libosmesa6-dev \
+    # libpng-dev \
+    # lxde \
+    # mesa-utils \
+    # ne \
+    # python3 \
+    # python3-dev \
+    # python3-pip \
+    # python3-tk \
+    # python3-dbg \
+    # pybind11-dev \
+    # software-properties-common \
+    # x11vnc \
+    # xorg-dev \
+    # xterm \
+    # ninja-build \
+    # xvfb
 
 ### PCL (Point Cloud Library)
 RUN apt-get install -y libpcl-dev
