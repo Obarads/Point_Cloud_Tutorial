@@ -19,6 +19,10 @@ RUN apt-get autoremove -y && \
 ## conda
 RUN conda update -n base -c defaults conda
 
+## Create python 3.8
+RUN conda create python=3.8 -n pct_cpu
+RUN conda activate pct_cpu
+
 ## pytorch
 RUN conda install pytorch==1.9.1 torchvision torchaudio cpuonly -c pytorch
 
