@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # install ubuntu package
 RUN apt-get update && \
-    apt-get upgrade -y && \
+    apt-get upgrade -y
 
 ## clean
 RUN apt-get autoremove -y && \
