@@ -17,16 +17,6 @@ RUN if ! cat /etc/group | grep -e "^pip-global:" > /dev/null 2>&1; then groupadd
 ARG NODE_VERSION="none"
 RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
 
-# [Optional] If your pip requirements rarely change, uncomment this section to add them to the image.
-RUN pip3 --disable-pip-version-check --no-cache-dir install \
-    torch==1.9.1+cpu torchvision==0.10.1+cpu torchaudio==0.9.1 \
-    -f https://download.pytorch.org/whl/torch_stable.html
-RUN pip3 --disable-pip-version-check --no-cache-dir install \
-    open3d==0.13.0, \
-    k3d==2.9.7 \
-    plyfile==0.7.2 \
-    opencv-python==4.5.3.36
-
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends libpcl-dev
