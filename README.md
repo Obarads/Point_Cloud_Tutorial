@@ -20,7 +20,8 @@ ipynbファイルを使った点群処理のpythonチュートリアルレポジ
   - Dockerfileによるコンテナ作成 (以下に載せる例はこの方法を使用)
   - .devcontainerによるVSCodeからのコンテナ作成
 - Codespaces
-  - GithubからCodespaces上での作成 (Codespaces上のwidgetの仕様が追加された後に作成予定)
+  - GithubからCodespaces上での作成
+    - Codespaces環境のJupyterのKernelは`Python 3.8.X 64-bit`を利用、視覚化時に`Widgets require us ...`とパネルが出るので、`Ok`を押す。
 
 GPUとdockerを用いた環境の用意を行う場合は、以下のコマンドを入力します。
 1. Dockerによるコンテナの作成
