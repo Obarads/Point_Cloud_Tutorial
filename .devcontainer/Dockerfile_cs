@@ -1,0 +1,36 @@
+FROM continuumio/miniconda3:4.10.3
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+### PCL (Point Cloud Library)
+RUN apt-get install -y libpcl-dev
+
+# install python packages
+## conda
+RUN conda update -n base -c defaults conda
+
+# Create python3.8 env
+RUN conda create python=3.8 -n pct_cpu -y
+SHELL ["conda", "run", "-n", "pct_cpu", "/bin/bash", "-c"]
+
+## pytorch
+RUN conda install pytorch==1.9.1 torchvision torchaudio cpuonly -c pytorch
+
+### open3d
+RUN conda install -c open3d-admin -c conda-forge open3d=0.13.0 -y
+
+### other
+RUN conda install -c conda-forge k3d=2.9.7 -y
+
+### clren and init
+RUN conda clean -i -t -y
+RUN conda init
+
+## pip
+RUN pip install plyfile==0.7.2
+RUN pip install opencv-python==4.5.3.56
+
+RUN echo "\n\
+    conda activate pct_cpu \n\
+    " >> /root/.bashrc
+
