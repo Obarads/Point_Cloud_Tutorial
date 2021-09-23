@@ -4,7 +4,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # install ubuntu package
 RUN apt-get update && \
-    apt-get upgrade -y
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    wget
 
 ### PCL (Point Cloud Library)
 RUN apt-get install -y libpcl-dev
@@ -25,16 +27,8 @@ SHELL ["conda", "run", "-n", "pct_cpu", "/bin/bash", "-c"]
 ## pytorch
 RUN conda install pytorch==1.9.1 torchvision torchaudio cpuonly -c pytorch
 
-### pytorch3D (TODO)
-# RUN conda install -c fvcore -c iopath -c conda-forge fvcore=0.1.5.post20210804 iopath=0.1.9 -y
-# RUN conda install -c pytorch3d pytorch3d=0.5.0 -y
-
-### toch-geometric (TODO)
-# RUN conda install -c rusty1s pytorch-geometric=1.7.2=py37_torch_1.9.0_cu111 -y
-# RUN conda install pyg -c pyg -c conda-forge
-
 ### open3d
-RUN conda install -c open3d-admin  -c conda-forge open3d=0.13.0 -y
+RUN conda install -c open3d-admin -c conda-forge open3d=0.13.0 -y
 
 ### other
 RUN conda install -c conda-forge k3d=2.9.7 -y
@@ -46,3 +40,7 @@ RUN conda init
 ## pip
 RUN pip install plyfile==0.7.2
 RUN pip install opencv-python==4.5.3.56
+
+RUN echo "\n\
+    conda activate pct_cpu \n\
+    " >> /root/.bashrc

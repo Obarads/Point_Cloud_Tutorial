@@ -28,7 +28,7 @@ GPUとdockerを用いた環境の用意を行う場合は、以下のコマン�
     # Get Dockerfile from Github.
     wget https://raw.githubusercontent.com/Obarads/Point_Cloud_Tutorial/main/.devcontainer/Dockerfile 
     # Create Image.
-    docker build . -t pct
+    docker build . -t pct-gpu
     # Create a container with a port (-p). If you do not use GPU, please remove `--gpus all`.
     docker run -dit -p 8888:8888 --gpus all --name pctut pct 
     ```
@@ -47,3 +47,5 @@ GPUとdockerを用いた環境の用意を行う場合は、以下のコマン�
    ```
 2. コマンドを入力した後、コマンドを入力した端末にjupyterのアクセス先( http://127.0.1:8888/..... )が出るため、そのURLへアクセスする。
 
+## About correction
+もし修正点がある場合は、Issuesでお知らせください。
