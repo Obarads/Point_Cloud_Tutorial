@@ -43,6 +43,7 @@
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-renderers",
         "yzhang.markdown-all-in-one",
         "obarads.vscode-pc-viewer"
     ],

@@ -1,6 +1,6 @@
 # Point Cloud Tutorial
 ## 概要
-点群をpythonで扱うためのチュートリアルです。
+点群をpythonで扱うためのチュートリアルです。このチュートリアルは、特徴抽出手法や特徴をタスクの結果に反映する方法を軸にしていることに注意してください。
 
 ## 環境
 [Dockerfile](../docker/Dockerfile)で作成されたコンテナに従って本チュートリアルを進めます。Dockerfile内で書かれている内容については、[dockerのREADME.md](../docker/README.md)と以下のを参照してください。

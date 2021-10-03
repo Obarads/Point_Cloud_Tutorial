@@ -7,7 +7,7 @@ import urllib.request
 import tarfile
 import shutil
 
-from tutlibs.utils import rgb_to_hex, color_range_rgb_to_8bit_rgb
+from .utils import color_range_rgb_to_8bit_rgb
 
 def get_bunny_mesh(bunny_mesh_file_path='Bunny.ply') -> o3d.geometry.TriangleMesh:
     """Download stanford bunny mesh.
@@ -43,26 +43,47 @@ def get_bunny_mesh(bunny_mesh_file_path='Bunny.ply') -> o3d.geometry.TriangleMes
 ### ply file ###
 #################
 
+
+
 class Points:
     @staticmethod
-    def read(filename):
-        plydata = PlyData.read(filename)
-        ply_points = plydata['vertex']
-        ply_properties = ply_points.data.dtype.names
+    def read(_filename):
+        def ply(filename):
+            plydata = PlyData.read(filename)
+            ply_points = plydata['vertex']
+            ply_properties = ply_points.data.dtype.names
 
-        # XYZ
-        xyz_properties = ['x', 'y', 'z']
-        xyz = np.array([ply_points[c] for c in xyz_properties]).T
+            # XYZ
+            xyz_properties = ['x', 'y', 'z']
+            xyz = np.array([ply_points[c] for c in xyz_properties]).T
 
-        # Color
-        rgb_properties = ['red', 'green', 'blue']
-        if set(rgb_properties) <= set(ply_properties):
-            rgb = np.array([ply_points[c] for c in rgb_properties]).T
+            # Color
+            rgb_properties = ['red', 'green', 'blue']
+            if set(rgb_properties) <= set(ply_properties):
+                rgb = np.array([ply_points[c] for c in rgb_properties]).T
 
-        data = {}
-        for prop in ply_properties:
-            if not prop in xyz_properties and not prop in rgb_properties:
-                data[prop] = ply_points[prop]
+            data = {}
+            for prop in ply_properties:
+                if not prop in xyz_properties and not prop in rgb_properties:
+                    data[prop] = ply_points[prop]
+            return xyz, rgb, data
+
+        def pcd(_filename):
+            pcd = o3d.io.read_point_cloud(_filename)
+            xyz = np.asarray(pcd.points)
+            rgb = np.asarray(pcd.colors)
+            data = None
+            return xyz, rgb, data
+
+        support = {
+            'ply': ply,
+            'pcd': pcd
+        }
+        extension = _filename.split('.')[-1]
+        if extension in support:
+            xyz, rgb, data = support[extension](_filename) 
+        else:
+            raise NotImplementedError()
 
         return xyz, rgb, data
 
@@ -106,5 +127,4 @@ class Points:
 
 
 if __name__ == '__main__':
-    xyz, _ = Points.read('../../data/bunny.ply')
-    Points.write('../../data/bunny.ply', xyz)
+    xyz, colors, _ = Points.read('../../data/pcl_data/biwi_face_database/model.pcd')
