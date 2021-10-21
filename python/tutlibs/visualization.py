@@ -1,3 +1,4 @@
+import re
 import numpy as np
 import k3d
 
@@ -18,6 +19,44 @@ class Mesh:
                             )
         plot += plt_mesh
         plot.display()
+
+class Line:
+    @staticmethod
+    def plot(lines:np.ndarray, colors:np.ndarray=None, color_range:list=[0, 1],
+             width=0.002, plot:k3d.Plot=None):
+        """
+        Args:
+            lines: (N, 2, 3)
+        """
+        # color setup
+        if colors is not None:
+            # to 0 ~ 255 color range
+            colors = color_range_rgb_to_8bit_rgb(colors, color_range)
+            # to color code
+            colors = rgb_to_hex(colors)
+        else:
+            colors = []
+
+        # plot
+        if plot is None:
+            plot = k3d.plot()
+        else:
+            assert type(plot) == k3d.Plot
+
+        # for line in lines:
+        #     plot += k3d.line(line, width=0.0010)
+
+        N, _, _ = lines.shape
+        split_arr = np.concatenate([
+            np.full((N, 1, 3), 1),
+            np.full((N, 1, 3), np.nan),
+            np.full((N, 1, 3), 1)
+        ], axis=1)
+        lines = np.concatenate([lines, split_arr], axis=1).reshape(-1, 3)
+        plot += k3d.line(lines, color=0xff0000, width=width)
+
+        return plot
+
 
 #################
 ### Points ###

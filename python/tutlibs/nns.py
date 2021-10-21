@@ -5,7 +5,7 @@ def k_nearest_neighbors(coords1:np.ndarray, coords2:np.ndarray, k:int):
     """Compute k nearest neighbors between coords1 and coords2.
 
     Args:
-        coords1: coordinates of center points (N, C)
+        coords1: coordinates of centroid points (N, C)
         coords2: coordinates of all points (M, C)
         k: number of nearest neighbors
 
@@ -26,7 +26,7 @@ def radius_nearest_neighbors(coords1:np.ndarray, coords2:np.ndarray, r:float, k:
     """Compute radius nearest neighbors between coords1 and coords2.
 
     Args:
-        coords1: coordinates of center points (N, C)
+        coords1: coordinates of centroid points (N, C)
         coords2: coordinates of all points (M, C)
         r: radius
         k: number of nearest neighbors

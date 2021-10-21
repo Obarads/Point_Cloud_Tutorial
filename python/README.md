@@ -15,7 +15,7 @@
 - features.ipynb                : handcrafted featureとdeep learningの例を書く。
 - handcrafted_feature.ipynb     : PPFとPFHの計算があっているか確認する。
 - nns.ipynb                     : kNNとrNNの説明を書く。(kNNは後少し)
-- normals.ipynb                 : Normal estimationの自作を修正する、あと説明書く。
+- normals.ipynb                 : orientationの方法について説明。コードは揃ったので後回し。
 - sampling.ipynb                : コードの説明を書く。
 - transformations.ipynb:        : なし
 

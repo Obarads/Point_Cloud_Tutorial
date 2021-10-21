@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 def furthest_point_sampling(coords:np.ndarray, num_sample:int) -> np.ndarray:
     """Furthest point sampling
@@ -41,15 +42,12 @@ def voxel_grid_sampling(coords:np.ndarray, voxel_size:float) -> np.ndarray:
     N, C = coords.shape
     indices_float = coords / voxel_size
     indices = indices_float.astype(np.int32)
-    voxel_pattern, voxel_labels = np.unique(indices, axis=0, return_inverse=True)
-    label_length = len(voxel_pattern)
-    mask = np.identity(label_length, dtype=np.int32)[voxel_labels]
-    mask_c = np.tile(mask[..., np.newaxis], (1, 1, C)).astype(np.float32)
-    mask_c *= coords[:, np.newaxis, :]
-    mask_c[mask_c == 0] = np.nan
-    sample_points = np.nanmean(mask_c, axis=0)
+    _, voxel_labels = np.unique(indices, axis=0, return_inverse=True)
+    df = pd.DataFrame(data=np.concatenate([voxel_labels[:, np.newaxis], coords], axis=1), columns=np.arange(C+1))
+    voxel_mean_df = df.groupby(0).mean()
+    samples = voxel_mean_df.to_numpy()
 
-    return sample_points
+    return samples
 
 def pass_through_filter(coords:np.ndarray, filter_range:np.ndarray) -> np.ndarray:
     """PCL PassThrough filter

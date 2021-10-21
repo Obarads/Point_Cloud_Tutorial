@@ -1,3 +1,0 @@
-[submodule "data/pcl_data"]
-	path = data/pcl_data
-	url = https://github.com/PointCloudLibrary/data.git
