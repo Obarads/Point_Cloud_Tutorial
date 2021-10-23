@@ -42,6 +42,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/features/pfh.h>
 #include <pcl/features/normal_3d.h>
+#include <fstream>
 
 int
 main (int, char** argv)
@@ -96,6 +97,14 @@ main (int, char** argv)
   // Display and retrieve the shape context descriptor vector for the 0th point.
   pcl::PFHSignature125 descriptor = (*pfh_features)[0];
   std::cout << descriptor << std::endl;
+
+  std::ofstream ofs_csv_file("output.txt");
+  ofs_csv_file << descriptor;
+
+  // for (int i = 0; i < pfh_features->size(); i++){
+  //   descriptor
+  // }
+
 
   return 0;
 }

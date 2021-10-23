@@ -66,7 +66,7 @@
     // },
 
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "pip3 install open3d==0.13.0 k3d==2.9.7 plyfile==0.7.2 && pip3 install torch==1.9.1+cpu torchvision==0.10.1+cpu torchaudio==0.9.1 -f https://download.pytorch.org/whl/torch_stable.html",
+    "postCreateCommand": "sh .devcontainer/pip.sh",
 
     // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     "remoteUser": "vscode"
