@@ -1,7 +1,7 @@
 import numpy as np
 
 from .transformation import TransformationMatrix as tm
-from .utils import grouping, square_distance
+from .operator import square_distance
 from .nns import k_nearest_neighbors
 
 def brute_force_matching(coords1:np.ndarray, coords2:np.ndarray) -> np.ndarray:
@@ -12,177 +12,92 @@ def brute_force_matching(coords1:np.ndarray, coords2:np.ndarray) -> np.ndarray:
         coords2: point cloud feature (M, C)
 
     Return
-        corr_set: correspondence set (N, 2)
+        corr_set: correspondence set, [..., [coord1_idx, coord2_idx], ...] (N, 2)
     """
-    idx, _ = k_nearest_neighbors(coords1, coords2, 1)
+    coords2_idx, _ = k_nearest_neighbors(coords1, coords2, 1)
     coords1_idx = np.arange(coords1.shape[0]).reshape(-1, 1)
-    corr_set = np.hstack([idx, coords1_idx])
+    corr_set = np.hstack([coords1_idx, coords2_idx])
     return corr_set
 
-def correspondence_rejection_with_distance(source_xyz:np.ndarray, target_xyz:np.ndarray,
-                                           correspondence_indices:np.ndarray,
-                                           threshold:float=0.05):
-    """Correspondence rejection with distance threshold between source xyz and target xyz,
-    Corresponding points whose distance between source and target exceeds the threshold will be deleted by this function.
+class CorrespondenceRejection:
+    @staticmethod
+    def distance_between_points(source_xyz:np.ndarray, target_xyz:np.ndarray,
+                                corr_set:np.ndarray,
+                                threshold:float=0.05):
+        """Correspondence rejection with distance threshold between source xyz and target xyz,
+        Corresponding points whose distance between source and target exceeds the threshold will be deleted by this function.
 
-    Args:
-        source_xyz: coordinates of source points, (N, 3)
-        target_xyz: coordinates of target points, (M, 3)
-        correspondence_indices: target xyz indices corresponding to source xyz, (N, 3)
-        threshold: distance threshold
+        Args:
+            source_xyz: coordinates of source points, (N, 3)
+            target_xyz: coordinates of target points, (M, 3)
+            corr_set: target xyz indices corresponding to source xyz, (N, 3)
+            threshold: distance threshold
+
+        Return:
+            new_source_indices: new source indices, (L, 3)
+        """
+        correspondence_xyz = target_xyz[corr_set]
+        two_point_distance = source_xyz - correspondence_xyz
+        new_source_indices = np.arange(source_xyz.shape[0])[two_point_distance > threshold]
+        return new_source_indices
+
+    @staticmethod
+    def ransac(source_xyz:np.ndarray, target_xyz:np.ndarray,
+               corr_set:np.ndarray, ransac_n:int, iteration:int, 
+               threshold:float):
+        """Correspondence rejection with RANSAC.
         
-    Return:
-        new_source_indices: new source indices, (L, 3)
-    """
-    
-    correspondence_xyz = target_xyz[correspondence_indices]
-    two_point_distance = source_xyz - correspondence_xyz
-    new_source_indices = np.arange(source_xyz.shape[0])[two_point_distance > threshold]
-    return new_source_indices
+        Args:
+            source_xyz: coordinates of source points (N, 3)
+            target_xyz: coordinates of target points (M, 3)
+            corr_set: correspondence index between source and target (L, 2)
+            ransac_n: number of random sampling points for RANSAC, ransac_n <= L
+            iter: number of iteration 
+            threshold: RANSAC threshold
 
-def correspondence_rejection_ransac(source_xyz:np.ndarray, target_xyz:np.ndarray,
-                                    corr_set:np.ndarray, ransac_n:int,
-                                    iter:int, threshold:float, 
-                                    checkers:list=[]):
-    """Correspondence rejection with RANSAC
-    
-    Args:
-        source_xyz: coordinates of source points (N, 3)
-        target_xyz: coordinates of target points (M, 3)
-        corr_set: correspondence index between source and target (L, 2)
-        ransac_n: number of random sampling points for RANSAC, ransac_n <= L
-        iter: number of iteration 
-        threshold: RANSAC threshold
-        checkers: correspondence rejection functions
+        Returns:
+            ransac_corr: new correspondence indices, (J, 3)
+            num_inliner: number of inlier
+            inlier_rmse: RMSE of distances between new 2 point correspondence
+        """
 
-    Returns:
-        ransac_corr: new correspondence indices, (J, 3)
-        fitness: number of inlier / ransac_corr
-        inlier_rmse: RMSE of distances between new 2 point correspondence
-    """
+        best_ransac_corr = corr_set
+        best_inlier_ratio = 0
+        best_inlier_rmse = 0
 
-    best_ransac_corr = corr_set
-    best_fitness = 0
-    best_inlier_rmse = 0
+        # Start RANSAC.
+        for _ in range(iteration):
+            # define random sampling.
+            corr_random_idxs = np.random.default_rng().choice(corr_set.shape[0],
+                                                              size=ransac_n,
+                                                              replace=False)
+            ransac_corr = corr_set[corr_random_idxs]
 
-    # Start RANSAC.
-    for i in range(iter):
-        # Define random sampling for RANSAC
-        corr_random_idxs = np.random.default_rng().choice(corr_set.shape[0], size=ransac_n, replace=False)
-        ransac_corr = corr_set[corr_random_idxs]
+            # estimate transformation with ransac correspondetion.
+            corr_trans_mat = estimate_transformation(source_xyz,
+                                                     target_xyz,
+                                                     ransac_corr)
+            trans_source_xyz = tm.transformation(source_xyz, corr_trans_mat)
 
-        # Estimate transformation with ransac correspondetion
-        R, T = estimate_transformation_with_svd_and_corr_set(source_xyz, target_xyz, ransac_corr)
-        trans_source_xyz = tm.transformation_Nx3_with_3x3_3(source_xyz, R, T)
+            # get inlier information.
+            corr_square_dists = square_distance(trans_source_xyz, target_xyz)[corr_set[:, 0], corr_set[:, 1]]
+            inlier_mask = corr_square_dists < threshold ** 2
+            inlier_corr_set = corr_set[inlier_mask]
+            inlier_square_dists = corr_square_dists[inlier_mask]
+            num_inlier = len(inlier_corr_set)
 
-        # Use correspondence rejection.
-        for checker in checkers:
-            checked_idxs = checker(trans_source_xyz, target_xyz, ransac_corr)
-            ransac_corr = ransac_corr[checked_idxs]
-            
-        # RANSAC evaluation
-        square_threshold = threshold ** 2
-        square_corr_dists = square_distance(trans_source_xyz, target_xyz)[ransac_corr[:, 0], ransac_corr[:, 1]]
-        inliers = np.arange(square_corr_dists.shape[0])[square_corr_dists < square_threshold]
-        num_inlier = inliers.shape[0]
-        error = np.sum(square_corr_dists[square_corr_dists < square_threshold])
+            # evaluation
+            if num_inlier > 0:
+                inlier_rmse = np.mean(inlier_square_dists)
+                inlier_ratio = num_inlier / len(corr_set)
+                if inlier_ratio > best_inlier_ratio or (inlier_ratio == best_inlier_ratio and inlier_rmse < best_inlier_rmse):
+                    best_ransac_corr = inlier_corr_set
+                    best_inlier_ratio = inlier_ratio
+                    best_inlier_rmse = inlier_rmse
 
-        if num_inlier == 0:
-            fitness = 0.0
-            inlier_rmse = 0.0
-        else:
-            fitness = num_inlier / ransac_corr.shape[0]
-            inlier_rmse = error / num_inlier
-            if fitness > best_fitness or (fitness == best_fitness and inlier_rmse < best_inlier_rmse):
-                best_ransac_corr = ransac_corr
-                best_fitness = fitness
-                best_inlier_rmse = inlier_rmse
+        return best_ransac_corr, best_inlier_ratio, best_inlier_rmse
 
-    return best_ransac_corr, best_fitness, best_inlier_rmse
-
-# def correspondence_ransac(source_xyz:np.ndarray, target_xyz:np.ndarray,
-#                           source_feature:np.ndarray, target_feature:np.ndarray,
-#                           corr_set:np.ndarray, ransac_n:int,
-#                           iter:int, threshold:float, 
-#                           checkers:list=[]):
-#     """Correspondence rejection with RANSAC
-    
-#     Args:
-#         source_xyz: coordinates of source points (N, 3)
-#         target_xyz: coordinates of target points (M, 3)
-#         source_feature: features of source points (N, C)
-#         target_feature: features of target points (M, C)
-#         corr_set: correspondence index between source and target (L, 2)
-#         ransac_n: number of random sampling points for RANSAC, ransac_n <= L
-#         iter: number of iteration 
-#         threshold: RANSAC threshold
-#         checkers: correspondence rejection functions
-
-#     Returns:
-#         ransac_corr: new correspondence indices, (J, 3)
-#         fitness: number of inlier / ransac_corr
-#         inlier_rmse: RMSE of distances between new 2 point correspondence
-#     """
-
-#     # Start RANSAC.
-#     for i in range(iter):
-#         # Define random sampling for RANSAC
-#         corr_random_idxs = np.random.default_rng().choice(corr_set.shape[0], size=ransac_n, replace=False)
-#         ransac_corr = corr_set[corr_random_idxs]
-
-#         # Estimate transformation with ransac correspondetion
-#         R, T = estimate_transformation_with_svd_and_corr_set(source_xyz, target_xyz, ransac_corr)
-#         trans_source_xyz = tm.transformation_Nx3_with_3x3_3(source_xyz, R, T)
-
-#         # Use correspondence rejection.
-#         for checker in checkers:
-#             checked_idxs = checker(trans_source_xyz, target_xyz, ransac_corr)
-#             ransac_corr = ransac_corr[checked_idxs]
-            
-#         # RANSAC evaluation
-#         square_threshold = threshold ** 2
-#         square_corr_dists = square_distance(trans_source_xyz, target_xyz)[ransac_corr[:, 0], ransac_corr[:, 1]]
-#         inliers = np.arange(square_corr_dists.shape[0])[square_corr_dists < square_threshold]
-#         num_inlier = inliers.shape[0]
-#         error = np.sum(square_corr_dists[square_corr_dists < square_threshold])
-
-#         # evaluation value check
-#         if num_inlier == 0:
-#             fitness = 0.0
-#             inlier_rmse = 0.0
-#         else:
-#             fitness = num_inlier / ransac_corr.shape[0]
-#             inlier_rmse = error / num_inlier
-
-#     return ransac_corr, fitness, inlier_rmse
-
-def estimate_transformation_with_svd(source:np.ndarray,
-                                     target:np.ndarray) -> np.ndarray:
-    """Estimate transformation with Singular Value Decomposition (SVD).
-
-    Args:
-        source: (N, 3)
-        target: (N, 3)
-    
-    Returns:
-        R: rotation matrix, (3, 3)
-        T: translation vector, (3)
-    """
-
-    centroid_source = np.mean(source, axis=0)
-    centroid_target = np.mean(target, axis=0)
-
-    source = source - centroid_source
-    target = target - centroid_target
-
-    H = np.matmul(source.T, target)
-    u, _, vh = np.linalg.svd(H)
-    R = np.matmul(vh.T, u.T)
-    T = centroid_target - np.matmul(R, centroid_source)
-
-    return R, T
-
-def estimate_transformation_with_svd_and_corr_set(
+def estimate_transformation(
         source:np.ndarray, target:np.ndarray, corr_set:np.ndarray
         ) -> np.ndarray:
     """Estimate transformation with Singular Value Decomposition (SVD).
@@ -190,11 +105,11 @@ def estimate_transformation_with_svd_and_corr_set(
     Args:
         source: coordinates of source points, (N, 3)
         target: coordinates of target points, (M, 3)
-        corr_set: correspondence index between source and target (L, 2) 
+        corr_set: correspondence index between source and target (L, 2)
 
     Returns:
-        R: rotation matrix, (3, 3)
-        T: translation vector, (3)
+        rotation_3x3: rotation matrix, (3, 3)
+        translation_3: translation vector, (3)
     """
 
     source = source[corr_set[:, 0]]
@@ -206,12 +121,17 @@ def estimate_transformation_with_svd_and_corr_set(
     source = source - centroid_source
     target = target - centroid_target
 
-    H = np.matmul(source.T, target)
-    u, _, vh = np.linalg.svd(H)
-    R = np.matmul(vh.T, u.T)
-    T = centroid_target - np.matmul(R, centroid_source)
+    correlation_mat = np.matmul(source.T, target)
+    u, _, vh = np.linalg.svd(correlation_mat)
+    rotation_3x3 = np.matmul(vh.T, u.T)
+    translation_3 = centroid_target - np.matmul(rotation_3x3, centroid_source)
 
-    return R, T
+    trans_mat = tm.composite([
+        tm.from_translation(translation_3),
+        tm.from_rotation(rotation_3x3)
+    ])
+    
+    return trans_mat
 
 def icp(source:np.ndarray, target:np.ndarray, iteration:int,
         threshold:float=0.0000001, init_trans_mat:np.ndarray=None) -> np.ndarray:
@@ -230,36 +150,44 @@ def icp(source:np.ndarray, target:np.ndarray, iteration:int,
 
     if init_trans_mat is None:
         init_trans_mat = np.identity(4)
+    trans_mat = init_trans_mat.copy() # transformation matrix
 
-    target = np.copy(target)
-    source = np.copy(source)
-    trans_mat = np.copy(init_trans_mat) # transformation matrix
-    # new_trans_mat = np.copy(init_trans_mat) # previus transformation matrix
+    target = target.copy()
+    source = source.copy()
 
     for _ in range(iteration):
-        trans_source = tm.transformation_Nx3_with_4x4(source, trans_mat)
-        idxs, _ = k_nearest_neighbors(trans_source, target, k=2)
-        correspondence_target = grouping(target, idxs)[:, 1]
+        # transform source xyz with trans_mat
+        trans_source = tm.transformation(source, trans_mat)
 
-        R, T = estimate_transformation_with_svd(trans_source, correspondence_target)
-        new_trans_source = tm.transformation_Nx3_with_3x3_3(trans_source, R, T)
+        # find correspondece set between target and trans_source
+        corr_set = brute_force_matching(trans_source, target)
 
-        R_mat = tm.rotation_3x3_to_4x4(R)
-        T_mat = tm.translation_3_to_4x4(T)
-        trans_mat = tm.composite_4x4([T_mat, R_mat, trans_mat])
+        # compute transformation matrix between trans_source and target with corr_set
+        corr_trans_mat = estimate_transformation(trans_source, target, corr_set)
+        
+        # transform trans_source with corr_trans_mat
+        new_trans_source = tm.transformation(trans_source, corr_trans_mat)
+
+        # update trans_mat
+        trans_mat = tm.composite([corr_trans_mat, trans_mat])
 
         if np.sum(np.abs(new_trans_source - trans_source)) < threshold:
             break
 
     return trans_mat
 
-def icp_ransac(source:np.ndarray, target:np.ndarray, iteration:int,
-               threshold:float=0.0000001, init_trans_mat:np.ndarray=None) -> np.ndarray:
-    """Iterative Closest Point
+def feature_ransac(source_xyz:np.ndarray, target_xyz:np.ndarray,
+                   source_feature:np.ndarray, target_feature:np.ndarray,
+                   ransac_n:int, iteration:int, threshold:float=0.0000001,
+                   init_trans_mat:np.ndarray=None) -> np.ndarray:
+    """
 
     Args:
-        source: coordinates of source points, (N, 3)
-        target: coordinates of target points, (M, 3)
+        source_xyz: coordinates of source points, (N, 3)
+        target_xyz: coordinates of target points, (M, 3)
+        source_features: features of source points, (N, C)
+        target_features: features of target points, (M, C)
+        ransac_n: number of samples
         iteration: icp iteration
         threshold: convergence threshold
         init_trans_mat: initialinitial transformation matrix, (4, 4)
@@ -268,27 +196,36 @@ def icp_ransac(source:np.ndarray, target:np.ndarray, iteration:int,
         trans_mat: (4, 4)
     """
 
+    # set transformation matrix
     if init_trans_mat is None:
         init_trans_mat = np.identity(4)
-        
-    target = np.copy(target)
-    source = np.copy(source)
-    trans_mat = np.copy(init_trans_mat) # transformation matrix
+    trans_mat = init_trans_mat.copy()
 
-    for _ in range(iteration):
-        trans_source = tm.transformation_Nx3_with_4x4(source, trans_mat)
-        corr_set = brute_force_matching(trans_source, target)
+    # data copy
+    target_xyz = target_xyz.copy()
+    source_xyz = source_xyz.copy()
+    target_feature = target_feature.copy()
+    source_feature = source_feature.copy()
 
-        ransac_corr_set, _, _ = correspondence_rejection_ransac(source, target, corr_set, 50, 100, 0.00001)
+    # correspondence baed features
+    corr_set_feature = brute_force_matching(source_feature, target_feature)
 
-        R, T = estimate_transformation_with_svd_and_corr_set(trans_source, target, ransac_corr_set)
-        new_trans_source = tm.transformation_Nx3_with_3x3_3(trans_source, R, T)
+    # source xyz with corrent transformation
+    trans_source_xyz = tm.transformation(source_xyz, trans_mat)
 
-        R_mat = tm.rotation_3x3_to_4x4(R)
-        T_mat = tm.translation_3_to_4x4(T)
-        trans_mat = tm.composite_4x4([T_mat, R_mat, trans_mat])
+    # correspondence rejection for corr_set_feature
+    ransac_corr_set, _, _ = CorrespondenceRejection.ransac(trans_source_xyz,
+                                                           target_xyz,
+                                                           corr_set_feature,
+                                                           ransac_n, iteration,
+                                                           threshold)
 
-        if np.sum(np.abs(new_trans_source - trans_source)) < threshold:
-            break
+    # transformation estimation with ransac_rcorr_set
+    corr_trans_mat = estimate_transformation(trans_source_xyz,
+                                             target_xyz,
+                                             ransac_corr_set)
+
+    # create new transformation matrix
+    trans_mat = tm.composite([corr_trans_mat, trans_mat])
 
     return trans_mat

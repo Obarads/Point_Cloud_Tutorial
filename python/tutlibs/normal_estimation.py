@@ -1,10 +1,7 @@
 import numpy as np
-
-
-from .nns import k_nearest_neighbors
-from .utils import grouping, square_distance
-
 from scipy.sparse.csgraph import minimum_spanning_tree
+from .nns import k_nearest_neighbors
+from .operator import gather, square_distance
 
 # Note:
 # (1) code is same code below:
@@ -24,7 +21,7 @@ def normal_estimation(coords:np.ndarray, k:int=10) -> np.ndarray:
     """
     # Get neighbor points. (TODO: add radius)
     idxs, _  = k_nearest_neighbors(coords, coords, k)
-    knn_points = grouping(coords, idxs)
+    knn_points = gather(coords, idxs)
 
     # Get covariance matrix of each point.
     knn_mean_points = np.mean(knn_points, axis=-2, keepdims=True)

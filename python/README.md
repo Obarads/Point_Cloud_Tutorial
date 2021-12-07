@@ -10,37 +10,39 @@
 `ファイル名: 記載予定`という形式で以下に記載する。`記載予定`が「なし」のものは現状完了しているものです。
 - basic_code.ipynb              : なし
 - characteristic.ipynb          : なし
-- converting.ipynb              : Mesh to pointとpoint to Meshのコードと説明を書く。
-- coodinate_system.ipynb        : グローバルとローカル座標系について書く。
-- features.ipynb                : handcrafted featureとdeep learningの例を書く。
-- handcrafted_feature.ipynb     : PPFとPFHの計算があっているか確認する。
-- nns.ipynb                     : kNNとrNNの説明を書く。(kNNは後少し)
-- normals.ipynb                 : orientationの方法について説明。コードは揃ったので後回し。
-- sampling.ipynb                : コードの説明を書く。
-- transformations.ipynb:        : なし
+- ~~coodinate_system.ipynb        : グローバルとローカル座標系について書く。~~
+- features.ipynb                : 一旦終了
+- handcrafted_feature.ipynb     : 一旦終了
+- nns.ipynb                     : なし
+- normal_estimation.ipynb       : なし
+- sampling.ipynb                : なし
+- transformations.ipynb         : なし
+- registration.ipynb            : 説明を書く。
+- dataset.ipynb                 : Pix3DとKITTIについて書く。
+- constructing.ipynb            : 全体的に整える。
 
 ## チュートリアルで使用するパッケージ一覧
 ### Open3D
 - [Code](https://github.com/isl-org/Open3D) | [Docs](http://www.open3d.org/docs/release/) | [ProjectPage](http://www.open3d.org/)
-- 点群の操作(剛体変換やサンプリング)、ファイルIO、タスクに対する手法などを盛り込んだライブラリです。python版のPCLと見ることもできます。
+- 点群の操作(剛体変換やサンプリング)、ファイルIO、タスクに対する手法などを盛り込んだライブラリです。python版のPCLと見ることもできます。本チュートリアルでは、ファイルの読み込みで利用します。
 
-### PyTorch geometric
+<!-- ### PyTorch geometric
 - [Code](https://github.com/rusty1s/pytorch_geometric) | [Docs](https://pytorch-geometric.readthedocs.io/en/latest/)
 - グラフやその他(不規則な構造)の表現をPytorchで扱うために生み出されたライブラリです。
-- 個人Note: 上記の表現を扱った深層学習を[Geometric Deep Learning](https://geometricdeeplearning.com/)として呼んでいるらしい。
+- 個人Note: 上記の表現を扱った深層学習を[Geometric Deep Learning](https://geometricdeeplearning.com/)として呼んでいるらしい。 -->
 
-### Pytorch3D
+<!-- ### Pytorch3D
 - [Code](https://github.com/facebookresearch/pytorch3d) | [Docs](https://pytorch3d.readthedocs.io/en/latest/) | [ProjectPage](https://pytorch3d.org/)
 - **概要**: Pytorchによる3D CV研究開発を効率的に行うために生み出されたライブラリです。
-- **注意**: 本チュートリアルではまだ予定しているだけです。
+- **注意**: 本チュートリアルではまだ予定しているだけです。 -->
 
 ### plyfile
 - [Code](https://github.com/dranjan/python-plyfile)
-- **概要**: PLYファイルの読み込み or 保存に使用するパッケージです。
+- PLYファイルの読み込み or 保存に使用するパッケージです。
 
 ### K3D Jupyter
 - [Code](https://github.com/K3D-tools/K3D-jupyter) | [Docs](https://k3d-jupyter.org/)
-- **概要**: 3D表現をJupyter上に視覚化することができるパッケージです。
+- 3D表現をJupyter上に視覚化することができるパッケージです。
 
 
 ## 使用しないが関連するパッケージ一覧

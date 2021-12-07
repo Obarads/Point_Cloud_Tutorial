@@ -66,7 +66,7 @@
     // },
 
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "sh .devcontainer/pip.sh",
+    "postCreateCommand": "sh .devcontainer/pip_cpu.sh",
 
     // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
     "remoteUser": "vscode"

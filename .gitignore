@@ -3,12 +3,16 @@
 .ipynb_checkpoints
 __pycache__
 
-# cpp
-build/
-
 # python
 tests
+check.ipynb
+
+# TODO
+constructing.ipynb
 
 # data
 outputs/
-
+data/pix3d
+pix3d.zip
+redwood-3dscan/
+*.pcd

@@ -1,0 +1,35 @@
+FROM pytorch/pytorch:1.9.0-cuda11.1-cudnn8-devel
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# install ubuntu package
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    wget \
+    ninja-build \
+    libpcl-dev
+
+## clean
+RUN apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# install python packages
+## Create python3.8 env
+RUN conda update -n base -c defaults conda && \
+    conda create python=3.8 -n pct_gpu -y
+SHELL ["conda", "run", "-n", "pct_gpu", "/bin/bash", "-c"]
+
+### install packages with conda
+RUN conda install -c open3d-admin  -c conda-forge open3d=0.13.0 -y && \
+    conda install -c conda-forge k3d=2.11.0 -y && \
+    conda clean -i -t -y && conda init
+## pip
+RUN pip install plyfile==0.7.2
+RUN pip install opencv-python==4.5.3.56
+
+## set 
+RUN echo "\n\
+    conda activate pct_gpu \n\
+    " >> /root/.bashrc

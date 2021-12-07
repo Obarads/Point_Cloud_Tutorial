@@ -1,6 +1,7 @@
+from numpy.lib.twodim_base import tri
 from plyfile import PlyData, PlyElement
 import numpy as np
-from typing import Dict
+from typing import Dict, Tuple
 import open3d as o3d
 import os
 import urllib.request
@@ -9,58 +10,78 @@ import shutil
 
 from .utils import color_range_rgb_to_8bit_rgb
 
-def get_bunny_mesh(bunny_mesh_file_path='Bunny.ply') -> o3d.geometry.TriangleMesh:
-    """Download stanford bunny mesh.
-    Ref code: https://github.com/isl-org/Open3D/blob/79011a9de0eb7ed921f2cf1767351fde894baab9/examples/python/open3d_tutorial.py#L229
-
-    Return:
-        mesh (o3d.geometry.TriangleMesh): loaded mesh data from a file.
-    """
-    bunny_path = bunny_mesh_file_path
-    if not os.path.exists(bunny_path):
-        print("downloading bunny mesh")
-        url = "http://graphics.stanford.edu/pub/3Dscanrep/bunny.tar.gz"
-        urllib.request.urlretrieve(url, bunny_path + ".tar.gz")
-        print("extract bunny mesh")
-        with tarfile.open(bunny_path + ".tar.gz") as tar:
-            tar.extractall(path=os.path.dirname(bunny_path))
-        shutil.move(
-            os.path.join(
-                os.path.dirname(bunny_path),
-                "bunny",
-                "reconstruction",
-                "bun_zipper.ply",
-            ),
-            bunny_path,
-        )
-        os.remove(bunny_path + ".tar.gz")
-        shutil.rmtree(os.path.join(os.path.dirname(bunny_path), "bunny"))
-    mesh = o3d.io.read_triangle_mesh(bunny_path)
-    mesh.compute_vertex_normals()
-    return mesh
-
 #################
 ### ply file ###
 #################
 
+class Mesh:
+    @staticmethod
+    def read(filename:str)->Tuple[np.ndarray, np.ndarray, dict]:
+        def _obj(_filename):
+            obj = o3d.io.read_triangle_mesh(_filename)
+            _vertices = np.asarray(obj.vertices, dtype=np.float32)
+            _triangles = np.asarray(obj.triangles, dtype=np.uint32)
+            _data = None
+            return _vertices, _triangles, _data
+
+        support = {
+            'obj': _obj,
+        }
+        extension = filename.split('.')[-1]
+        if extension in support:
+            vertices, triangles, data = support[extension](filename)
+        else:
+            raise NotImplementedError()
+
+        return vertices, triangles, data
+
+    @staticmethod
+    def write(filename:str, vertices:np.ndarray, triangles:np.ndarray):
+        # Vertex
+        vertex = []
+        vertex_prop = []
+
+        vertex.extend([*vertices.T])
+        vertex_prop.extend([('x', 'f4'), ('y', 'f4'), ('z', 'f4')])
+
+        ply_vertex = np.empty(len(vertices), dtype=vertex_prop)
+        for i, p in enumerate(vertex_prop):
+            ply_vertex[p[0]] = vertex[i]
+
+        # triangle face
+        face = []
+        face_prop = []
+
+        face.extend([triangles])
+        face_prop.extend([('vertex_indices', 'i4', (3,))])
+
+        ply_face = np.empty(len(triangles), dtype=face_prop)
+        for i, p in enumerate(face_prop):
+            ply_face[p[0]] = face[i]
+
+        # write ply file
+        ply = PlyData([PlyElement.describe(ply_vertex, 'vertex'),
+                       PlyElement.describe(ply_face, 'face')], text=True)
+        ply.write(filename)
 
 
 class Points:
     @staticmethod
-    def read(_filename):
-        def ply(filename):
+    def read(filename:str)->Tuple[np.ndarray, np.ndarray, dict]:
+        def _ply(filename):
             plydata = PlyData.read(filename)
             ply_points = plydata['vertex']
             ply_properties = ply_points.data.dtype.names
 
             # XYZ
             xyz_properties = ['x', 'y', 'z']
-            xyz = np.array([ply_points[c] for c in xyz_properties]).T
+            xyz = np.array([ply_points[c] for c in xyz_properties], dtype=np.float32).T
 
             # Color
             rgb_properties = ['red', 'green', 'blue']
+            rgb = None
             if set(rgb_properties) <= set(ply_properties):
-                rgb = np.array([ply_points[c] for c in rgb_properties]).T
+                rgb = np.array([ply_points[c] for c in rgb_properties], dtype=np.uint32).T
 
             data = {}
             for prop in ply_properties:
@@ -68,27 +89,27 @@ class Points:
                     data[prop] = ply_points[prop]
             return xyz, rgb, data
 
-        def pcd(_filename):
-            pcd = o3d.io.read_point_cloud(_filename)
-            xyz = np.asarray(pcd.points)
-            rgb = np.asarray(pcd.colors)
+        def _pcd(filename):
+            pcd = o3d.io.read_point_cloud(filename)
+            xyz = np.asarray(pcd.points, dtype=np.float32)
+            rgb = np.asarray(pcd.colors, dtype=np.uint32)
             data = None
             return xyz, rgb, data
 
         support = {
-            'ply': ply,
-            'pcd': pcd
+            'ply': _ply,
+            'pcd': _pcd
         }
-        extension = _filename.split('.')[-1]
+        extension = filename.split('.')[-1]
         if extension in support:
-            xyz, rgb, data = support[extension](_filename) 
+            xyz, rgb, data = support[extension](filename)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError("This funcation support followeing")
 
         return xyz, rgb, data
 
     @staticmethod
-    def write(filename, xyz:np.ndarray, colors:np.ndarray=None,
+    def write(filename:str, xyz:np.ndarray, colors:np.ndarray=None,
               color_range:list=[0, 1],
               additional_data:Dict[str, np.ndarray]=None):
         """
