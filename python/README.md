@@ -10,15 +10,13 @@
 `ファイル名: 記載予定`という形式で以下に記載する。`記載予定`が「なし」のものは現状完了しているものです。
 - basic_code.ipynb              : なし
 - characteristic.ipynb          : なし
-- ~~coodinate_system.ipynb        : グローバルとローカル座標系について書く。~~
-- features.ipynb                : 一旦終了
-- handcrafted_feature.ipynb     : 一旦終了
+- features.ipynb                : なし
+- handcrafted_feature.ipynb     : なし
 - nns.ipynb                     : なし
 - normal_estimation.ipynb       : なし
 - sampling.ipynb                : なし
 - transformations.ipynb         : なし
 - registration.ipynb            : 説明を書く。
-- dataset.ipynb                 : Pix3DとKITTIについて書く。
 - constructing.ipynb            : 全体的に整える。
 
 ## チュートリアルで使用するパッケージ一覧
