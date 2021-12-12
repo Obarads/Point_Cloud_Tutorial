@@ -17,11 +17,14 @@ def pair_feature(xyz:np.ndarray, normals:np.ndarray, pair_idxs:np.ndarray):
         theta: angle feature, value range is -pi/2~pi/2 (L)
         dists: distance feature (L)
     """
+
     # Get xyz and normal of points
-    p1 = xyz[pair_idxs[:, 0]]
-    n1 = normals[pair_idxs[:, 0]]
-    p2 = xyz[pair_idxs[:, 1]]
-    n2 = normals[pair_idxs[:, 1]]
+    point_1_indices = pair_idxs[:, 0]
+    point_2_indices = pair_idxs[:, 1]
+    p1 = xyz[point_1_indices]
+    n1 = normals[point_1_indices]
+    p2 = xyz[point_2_indices]
+    n2 = normals[point_2_indices]
 
     # Get vectors (pp) and distances (dists) between pt and ps
     pp = p2 - p1

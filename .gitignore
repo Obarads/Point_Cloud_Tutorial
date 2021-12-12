@@ -4,15 +4,19 @@
 __pycache__
 
 # python
-tests
 check.ipynb
-
-# TODO
 constructing.ipynb
 
-# data
-outputs/
-data/pix3d
-pix3d.zip
-redwood-3dscan/
+# pytest
+.pytest_cache
+
+# git clone dir
+/python/datasets/redwood-3dscan/
+
+# data file
 *.pcd
+outputs/
+/data/pix3d/
+/data/pix3d.zip
+/data/redwood-3dscan/
+

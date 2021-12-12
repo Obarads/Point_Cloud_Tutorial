@@ -16,9 +16,26 @@ from .utils import color_range_rgb_to_8bit_rgb
 
 class Mesh:
     @staticmethod
-    def read(filename:str)->Tuple[np.ndarray, np.ndarray, dict]:
-        def _obj(_filename):
-            obj = o3d.io.read_triangle_mesh(_filename)
+    def read(file_path:str)->Tuple[np.ndarray, np.ndarray, dict]:
+        """read a triangle mesh file.
+        
+        Args:
+            file_path: a triangle mesh file (support: obj, ply)
+        
+        Return:
+            vertices: vertices xyz of mesh (N, 3)
+            triangles: triangle edge indices (M, 3)
+            data: other data
+        """
+        def _obj(file_path):
+            obj = o3d.io.read_triangle_mesh(file_path)
+            _vertices = np.asarray(obj.vertices, dtype=np.float32)
+            _triangles = np.asarray(obj.triangles, dtype=np.uint32)
+            _data = None
+            return _vertices, _triangles, _data
+
+        def _ply(file_path):
+            obj = o3d.io.read_triangle_mesh(file_path)
             _vertices = np.asarray(obj.vertices, dtype=np.float32)
             _triangles = np.asarray(obj.triangles, dtype=np.uint32)
             _data = None
@@ -26,10 +43,11 @@ class Mesh:
 
         support = {
             'obj': _obj,
+            'ply': _ply,
         }
-        extension = filename.split('.')[-1]
+        extension = file_path.split('.')[-1]
         if extension in support:
-            vertices, triangles, data = support[extension](filename)
+            vertices, triangles, data = support[extension](file_path)
         else:
             raise NotImplementedError()
 
