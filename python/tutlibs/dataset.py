@@ -118,5 +118,8 @@ class Redwood3DScan:
 
         return rgb_image_paths, depth_image_paths, obj
 
-        
+class ScanNet:
+    def __init__(self) -> None:
+        pass
+    
 
