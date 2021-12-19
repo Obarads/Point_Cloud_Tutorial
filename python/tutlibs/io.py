@@ -35,10 +35,13 @@ class Mesh:
             return _vertices, _triangles, _data
 
         def _ply(file_path):
-            obj = o3d.io.read_triangle_mesh(file_path)
-            _vertices = np.asarray(obj.vertices, dtype=np.float32)
-            _triangles = np.asarray(obj.triangles, dtype=np.uint32)
-            _data = None
+            ply = o3d.io.read_triangle_mesh(file_path)
+            _vertices = np.asarray(ply.vertices, dtype=np.float32)
+            _triangles = np.asarray(ply.triangles, dtype=np.uint32)
+            if ply.has_vertex_colors():
+                _data = np.asarray(ply.vertex_colors)
+            else:
+                _data = None
             return _vertices, _triangles, _data
 
         support = {
@@ -118,7 +121,7 @@ class Points:
             'ply': _ply,
             'pcd': _pcd
         }
-        extension = filename.split('.')[-1]
+        extension = filename.split('.')[-1] # TODO
         if extension in support:
             xyz, rgb, data = support[extension](filename)
         else:

@@ -16,7 +16,7 @@ constructing.ipynb
 # data file
 *.pcd
 outputs/
-/data/pix3d/
+/data/pix3d
 /data/pix3d.zip
 /data/redwood-3dscan/
-
+/data/ScanNet
