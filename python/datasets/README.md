@@ -2,19 +2,22 @@
 ## Introduction
 3D data can be obtained from public 3D datasets. However, the format and structure of the data in a 3D dataset often differ depending on the dataset. This section demonstrate examples to get data from datasets with different specifications.  
 
-## Dataset download type:
-There are two download type in used the tutorial:
-1. All data: download all data of a dataset.
-2. Split data: download data per samples.
-
 ## Dataset list
-This section introduce the following dataset of 3D representation.
-- Pix3D (All data)
-- Redwood-3dscan (Split data)
+This tutorial introduce the following dataset of 3D representation. 
 
-TODO
-- S3DIS
-- ScanNet
-- ShapeNetPart
-- ModelNet
-- KITTI
+Table columns mean:
+- `download type` : There are two download type in used the tutorial,
+  1. All data: download all data of a dataset.
+  2. Split data: download data per samples.
+- `Request`: If this column is `o`, you need to acquire usage permission from the publisher.
+
+|Dataset name|download type| Request |
+|-|-|-|
+| Pix3D |All data | x |
+| Redwood-3dscan | Split data | x |
+| ScanNet | Split data | o |
+| KITTI | All data | o |
+| ShapeNetPart | All data | o |
+| ModelNet | All data | x |
+| S3DIS | All data | o |
+
