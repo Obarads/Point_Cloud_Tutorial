@@ -127,8 +127,16 @@ class JupyterVisualizer:
         return obj_voxel
 
     @staticmethod
-    def mesh(vertices: np.ndarray, edges: np.ndarray):
-        obj_mesh = k3d.mesh(vertices=vertices, indices=edges, side='double')
+    def mesh(vertices: np.ndarray, edges: np.ndarray, colors: np.ndarray = None, color_range: List[float]=[0, 255]):
+        if colors is not None:
+            # to 0 ~ 255 color range
+            colors = color_range_rgb_to_8bit_rgb(colors, color_range)
+            # to color code
+            colors = rgb_to_hex(colors)
+        else:
+            colors = []
+
+        obj_mesh = k3d.mesh(vertices=vertices, indices=edges, colors=colors, side='double')
         return obj_mesh
 
 class JupyterVisualizerUtils:

@@ -6,6 +6,7 @@ __pycache__
 # python
 check.ipynb
 constructing.ipynb
+kitti.ipynb
 
 # pytest
 .pytest_cache
@@ -20,3 +21,4 @@ outputs/
 /data/pix3d.zip
 /data/redwood-3dscan/
 /data/ScanNet
+/data/kitti

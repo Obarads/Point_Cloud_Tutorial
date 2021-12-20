@@ -195,3 +195,41 @@ class ScanNet:
         return data
 
 
+# @dataclass
+# class KITTIData:
+#     """__getitem__ return values of ScanNet class"""
+#     scan_data_path: str
+
+# class KITTI:
+#     def __init__(self, dataset_path:str) -> None:
+#         self.dataset_path = dataset_path
+
+#     def __len__(self):
+#         return
+
+#     def __getitem__(self, idx:int) -> ScanNetData:
+#         # get path to scan data folder (/path/to/scene%04d_%02d)
+#         scan_data_path = self.scan_data_path_list[idx]
+#         data = ScanNetData
+
+#         data.scan_data_path = scan_data_path
+
+#         data.vh_clean_2_mesh = Mesh.read(opj(scan_data_path, 'scene0000_00_vh_clean_2.ply'))
+#         data.vh_clean_2_label_mesh = Mesh.read(opj(scan_data_path, 'scene0000_00_vh_clean_2.labels.ply'))
+
+#         def file_number(path:str):
+#             file_number = path.split("/")[-1].split('.')[0]
+#             return int(file_number)
+
+#         data.depth_image_paths = sorted(glob.glob(opj(scan_data_path, "sens", "depth", "*")), key=file_number)
+#         data.depth_image_intrinsic_matrix = np.loadtxt(opj(scan_data_path, "sens", "intrinsic", "intrinsic_depth.txt"))
+#         data.depth_image_extrinsic_matrix = np.loadtxt(opj(scan_data_path, "sens", "intrinsic", "extrinsic_depth.txt"))
+#         data.color_image_paths = sorted(glob.glob(opj(scan_data_path, "sens", "color", "*")), key=file_number)
+#         data.color_image_intrinsic_matrix = np.loadtxt(opj(scan_data_path, "sens", "intrinsic", "intrinsic_color.txt"))
+#         data.color_image_extrinsic_matrix = np.loadtxt(opj(scan_data_path, "sens", "intrinsic", "extrinsic_color.txt"))
+
+#         data.pose_file_paths = sorted(glob.glob(opj(scan_data_path, "sens", "pose", "*")), key=file_number)
+
+#         assert len(data.depth_image_paths) == len(data.color_image_paths) and len(data.depth_image_paths) == len(data.pose_file_paths)
+
+#         return data
