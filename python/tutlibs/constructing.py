@@ -55,12 +55,12 @@ def mesh_to_point(
     return point_cloud
 
 
-# def mesh_to_voxel(vertices: np.ndarray, triangles: np.ndarray, voxel_size: float):
-#     for triangle in triangles:
-#         v3 = vertices[triangle]
-#         v3_min = np.min(v3, axis=0)
-#         v3_max = np.max(v3, axis=0)
-#     return
+def mesh_to_voxel(vertices: np.ndarray, triangles: np.ndarray, voxel_size: float):
+    # for triangle in triangles:
+    #     v3 = vertices[triangle]
+    #     v3_min = np.min(v3, axis=0)
+    #     v3_max = np.max(v3, axis=0)
+    return
 
 
 def voxel_to_point(voxel: np.ndarray) -> np.ndarray:
@@ -147,13 +147,16 @@ def point_to_voxel(point_cloud: np.ndarray, voxel_size: float):
     Return:
         voxels (N, N, N)
     """
-    
+
     voxel_grid_indices = (point_cloud / voxel_size).astype(np.int32)
     min_index = np.min(voxel_grid_indices, axis=0)
     voxel_grid_indices -= min_index
     voxel_length = np.max(voxel_grid_indices) + 1
-    np.zeros((voxel_length, voxel_length, voxel_length), dtype=np.bool)
-    return
+    voxels = np.zeros((voxel_length, voxel_length, voxel_length), dtype=np.uint8)
+    voxels[
+        voxel_grid_indices[:, 0], voxel_grid_indices[:, 1], voxel_grid_indices[:, 2]
+    ] = 1
+    return voxels
 
 
 # def point_to_mesh(point_cloud: np.ndarray):
