@@ -5,6 +5,7 @@ import json
 import cv2
 import scipy.io
 import requests
+import re
 from requests.models import Response
 import zipfile
 import glob
@@ -66,10 +67,9 @@ class Pix3D:
             cv2.imread(opj(self.dataset_dir_path, data.info["img"])), cv2.COLOR_BGR2RGB
         )
         data.mask = cv2.imread(opj(self.dataset_dir_path, data.info["mask"]))
-        data.voxel = np.transpose(
-            scipy.io.loadmat(opj(self.dataset_dir_path, data.info["voxel"]))["voxel"],
-            (1, 2, 0),
-        )
+        data.voxel = scipy.io.loadmat(opj(self.dataset_dir_path, data.info["voxel"]))[
+            "voxel"
+        ]
         data.mesh = Mesh.read(opj(self.dataset_dir_path, data.info["model"]))
 
         return data
@@ -103,7 +103,31 @@ class Redwood3DScan:
         data = Redwood3DScanData
         data_number = self.rgbd_data_number_list[idx]
 
-        # download RGB-D images.
+        # If dataset_dir_path/data_number/* data is not downloaded, this funciton download it.
+        self.download(data_number)
+
+        # get RGB-D images.
+        rgbd_data_dir_path = opj(self.dataset_dir_path, data_number, "rgbd")
+        data.color_image_paths = sorted(glob.glob(opj(rgbd_data_dir_path, "rgb", "*")))
+        data.depth_image_paths = sorted(
+            glob.glob(opj(rgbd_data_dir_path, "depth", "*"))
+        )
+
+        # get a Mesh data.
+        # Note: some samples have the mesh data (therefore, it check self.meshs_data_number_list)
+        if data_number in self.meshs_data_number_list:
+            mesh_data_dir_path = opj(self.dataset_dir_path, data_number, "mesh")
+            data.mesh = Mesh.read(opj(mesh_data_dir_path, f"{data_number}.ply"))
+        else:
+            data.mesh = None
+
+        return data
+
+    def download(
+        self,
+        data_number: str,
+    ) -> None:
+        # download RGB-D datasets.
         rgbd_data_dir_path = opj(self.dataset_dir_path, data_number, "rgbd")
         if not os.path.exists(rgbd_data_dir_path):
             download_data(
@@ -112,25 +136,19 @@ class Redwood3DScan:
                 extract_zip=True,
                 remove_zip=True,
             )
-        data.color_image_paths = sorted(glob.glob(opj(rgbd_data_dir_path, "rgb", "*")))
-        data.depth_image_paths = sorted(
-            glob.glob(opj(rgbd_data_dir_path, "depth", "*"))
-        )
 
         # download a mesh ply file.
-        # Note: some samples have the mesh data
-        if data_number in self.meshs_data_number_list:
-            mesh_data_dir_path = opj(self.dataset_dir_path, data_number, "mesh")
+        # Note: some samples have the mesh data (therefore, it check self.meshs_data_number_list)
+        mesh_data_dir_path = opj(self.dataset_dir_path, data_number, "mesh")
+        data_number in self.meshs_data_number_list
+        if (not os.path.exists(rgbd_data_dir_path)) and (
+            data_number in self.meshs_data_number_list
+        ):
             if not os.path.exists(mesh_data_dir_path):
                 download_data(
                     url=opj(self.download_domain_url, "mesh", f"{data_number}.ply"),
                     output_dir_path=mesh_data_dir_path,
                 )
-            data.mesh = Mesh.read(opj(mesh_data_dir_path, f"{data_number}.ply"))
-        else:
-            data.mesh = None
-
-        return data
 
 
 @dataclass
@@ -214,6 +232,91 @@ class ScanNet:
         ) == len(data.pose_file_paths)
 
         return data
+
+
+@dataclass
+class SUN3DData:
+    """__getitem__ return values of SUN3D class"""
+
+    data_path: str
+    color_image_paths: list
+    depth_image_paths: list
+    annotation_file_paths: list
+    extrinsics_file_paths: list
+    intrinsics_matrix: list
+
+
+class SUN3D:
+    path_list_url = "http://sun3d.cs.princeton.edu/SUN3Dv1.txt"
+    download_domain_url = "http://sun3d.cs.princeton.edu/data/"
+
+    def __init__(self, dataset_dir_path, datalist_path) -> None:
+        self.dataset_dir_path = dataset_dir_path
+        self.datalist_path = datalist_path
+
+        with open(self.datalist_path) as f:
+            self.datalist = f.read().split("\n")
+
+    def __len__(self):
+        return len(self.datalist)
+
+    def __getitem__(self, idx: int) -> SUN3DData:
+        data = SUN3DData
+        data_path = self.datalist[idx]
+        data.data_path = data_path
+
+        # If dataset_dir_path/data_path/* data is not downloaded, this funciton download it.
+        self.download(data_path)
+
+        # get RGB-D images.
+        data.color_image_paths = sorted(
+            glob.glob(opj(self.dataset_dir_path, data_path, "image", "*"))
+        )
+        data.depth_image_paths = sorted(
+            glob.glob(opj(self.dataset_dir_path, data_path, "depth", "*"))
+        )
+
+        # get other data.
+        data.annotation_file_paths = sorted(
+            glob.glob(opj(self.dataset_dir_path, data_path, "annotation", "*"))
+        )
+        data.extrinsics_file_paths = sorted(
+            glob.glob(opj(self.dataset_dir_path, data_path, "extrinsics", "*"))
+        )
+        data.intrinsics_matrix = np.loadtxt(
+            opj(self.dataset_dir_path, data_path, "intrinsics.txt")
+        )
+
+        return data
+
+    def download(self, data_folder_path):
+        folder_url_dict = {
+            "annotation": ".json",
+            "depth": ".png",
+            "extrinsics": ".txt",
+            "image": ".jpg",
+        }
+        for key in folder_url_dict:
+            ext = folder_url_dict[key]
+            data_file_table_url = opj(self.download_domain_url, data_folder_path, key)
+            response: Response = requests.get(data_file_table_url)
+            response.encoding = response.apparent_encoding
+            filename_list = re.findall(
+                f"(?<=href\=[\"'])[^\"']*{ext}[^\"']*(?=[\"'])", response.text
+            )
+            for filename in filename_list:
+                output_dir_path = opj(self.dataset_dir_path, data_folder_path, key)
+                output_file_path = opj(output_dir_path, filename)
+                if not os.path.exists(output_file_path):
+                    download_file_url = opj(data_file_table_url, filename)
+                    download_data(download_file_url, output_dir_path)
+
+        intrinsics_file_path = opj(
+            self.dataset_dir_path, data_folder_path, "intrinsics.txt"
+        )
+        if not os.path.exists(output_file_path):
+            intrinsics_url = opj(self.download_domain_url, "intrinsics.txt")
+            download_data(intrinsics_url, intrinsics_file_path)
 
 
 # @dataclass

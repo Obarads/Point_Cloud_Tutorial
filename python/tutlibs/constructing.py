@@ -137,7 +137,7 @@ def point_to_image(
     return img, pixel_indices
 
 
-def point_to_voxel(point_cloud: np.ndarray, voxel_size: float):
+def point_to_voxel(point_cloud: np.ndarray, voxel_size: float) -> np.ndarray:
     """Construct voxels from a point cloud.
 
     Args:
