@@ -314,9 +314,11 @@ class SUN3D:
         intrinsics_file_path = opj(
             self.dataset_dir_path, data_folder_path, "intrinsics.txt"
         )
-        if not os.path.exists(output_file_path):
-            intrinsics_url = opj(self.download_domain_url, "intrinsics.txt")
-            download_data(intrinsics_url, intrinsics_file_path)
+        if not os.path.exists(intrinsics_file_path):
+            intrinsics_url = opj(
+                self.download_domain_url, data_folder_path, "intrinsics.txt"
+            )
+            download_data(intrinsics_url, opj(self.dataset_dir_path, data_folder_path))
 
 
 # @dataclass
