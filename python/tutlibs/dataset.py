@@ -243,7 +243,7 @@ class SUN3DData:
     depth_image_paths: list
     annotation_file_paths: list
     extrinsics_file_paths: list
-    intrinsics_matrix: list
+    intrinsics_matrix: np.ndarray
 
 
 class SUN3D:

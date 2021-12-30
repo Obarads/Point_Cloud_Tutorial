@@ -11,17 +11,17 @@ Table columns mean:
   2. Split data: download data per samples.
 - `Request`: If this column is `o`, you need to acquire usage permission from the publisher.
 
-| Dataset name   | download type | Request |
-| -------------- | ------------- | ------- |
-| ModelNet       | All data      | x       |
-| KITTI          | All data      | o       |
-| Pix3D          | All data      | x       |
-| Redwood-3dscan | Split data    | x       |
-| S3DIS          | All data      | o       |
-| ScanNet        | Split data    | o       |
-| ShapeNetPart   | All data      | o       |
-| SUN3D          | Split data    | x       |
-| SUN RGB-D      | All data      | x       |
+| Dataset name   | download type | Request | Note                                               |
+| -------------- | ------------- | ------- | -------------------------------------------------- |
+| ModelNet       | All data      | x       | Not implemented                                    |
+| KITTI          | All data      | o       | Not implemented                                    |
+| Pix3D          | All data      | x       |                                                    |
+| Redwood-3dscan | Split data    | x       |                                                    |
+| S3DIS          | All data      | o       | Not implemented                                    |
+| ScanNet        | Split data    | o       |                                                    |
+| ShapeNetPart   | All data      | o       | Not implemented                                    |
+| SUN3D          | Split data    | x       | Use of transformation matrixes is not implemented. |
+| SUN RGB-D      | All data      | x       | Not implemented                                    |
 
 
 

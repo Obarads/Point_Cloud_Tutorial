@@ -149,7 +149,7 @@ class Points:
         filename: str,
         xyz: np.ndarray,
         colors: np.ndarray = None,
-        color_range: list = [0, 1],
+        color_range: list = [0, 255],
         additional_data: Dict[str, np.ndarray] = None,
     ):
         """
