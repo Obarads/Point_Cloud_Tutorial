@@ -137,7 +137,7 @@ def point_to_image(
     return img, pixel_indices
 
 
-def point_to_voxel(point_cloud: np.ndarray, voxel_size: float):
+def point_to_voxel(point_cloud: np.ndarray, voxel_size: float) -> np.ndarray:
     """Construct voxels from a point cloud.
 
     Args:
@@ -186,8 +186,8 @@ def depth_to_point(
         S: skews
 
     Returns:
-        a point cloud, (N, 3)
-        a pixel indices corresponding to the point cloud, (N, 2)
+        a point cloud: (N, 3)
+        a pixel indices corresponding to the point cloud: (N, 2)
     """
 
     img_y, img_x = depth_image.shape
