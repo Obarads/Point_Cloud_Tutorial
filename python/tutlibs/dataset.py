@@ -289,36 +289,34 @@ class SUN3D:
 
         return data
 
-    def download(self, data_folder_path):
-        folder_url_dict = {
+    def download(self, scene_dir_name):
+        scene_data_dir_dict = {
             "annotation": ".json",
             "depth": ".png",
             "extrinsics": ".txt",
             "image": ".jpg",
         }
-        for key in folder_url_dict:
-            ext = folder_url_dict[key]
-            data_file_table_url = opj(self.download_domain_url, data_folder_path, key)
-            response: Response = requests.get(data_file_table_url)
+        remote_scene_dir_url = opj(self.download_domain_url, scene_dir_name)
+        local_scene_dir_path = opj(self.dataset_dir_path, scene_dir_name)
+        for key in scene_data_dir_dict:
+            ext = scene_data_dir_dict[key]
+            remote_scene_data_dir_url = opj(remote_scene_dir_url, key)
+            loacl_scene_data_dir_path = opj(local_scene_dir_path, key)
+            response: Response = requests.get(remote_scene_data_dir_url)
             response.encoding = response.apparent_encoding
             filename_list = re.findall(
                 f"(?<=href\=[\"'])[^\"']*{ext}[^\"']*(?=[\"'])", response.text
             )
             for filename in filename_list:
-                output_dir_path = opj(self.dataset_dir_path, data_folder_path, key)
-                output_file_path = opj(output_dir_path, filename)
-                if not os.path.exists(output_file_path):
-                    download_file_url = opj(data_file_table_url, filename)
-                    download_data(download_file_url, output_dir_path)
+                local_scene_data_file_path = opj(loacl_scene_data_dir_path, filename)
+                remote_scene_data_file_url = opj(remote_scene_data_dir_url, filename)
+                if not os.path.exists(local_scene_data_file_path):
+                    download_data(remote_scene_data_file_url, loacl_scene_data_dir_path)
 
-        intrinsics_file_path = opj(
-            self.dataset_dir_path, data_folder_path, "intrinsics.txt"
-        )
+        intrinsics_file_path = opj(local_scene_dir_path, "intrinsics.txt")
+        intrinsics_url = opj(remote_scene_dir_url, "intrinsics.txt")
         if not os.path.exists(intrinsics_file_path):
-            intrinsics_url = opj(
-                self.download_domain_url, data_folder_path, "intrinsics.txt"
-            )
-            download_data(intrinsics_url, opj(self.dataset_dir_path, data_folder_path))
+            download_data(intrinsics_url, local_scene_dir_path)
 
 
 # @dataclass
