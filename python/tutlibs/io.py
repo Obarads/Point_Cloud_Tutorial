@@ -1,14 +1,12 @@
-from numpy.lib.twodim_base import tri
 from plyfile import PlyData, PlyElement
 import numpy as np
-from typing import Dict, Tuple
 import open3d as o3d
-import os
-import urllib.request
-import tarfile
-import shutil
+import scipy
+from typing import Dict, Tuple
 
 from .utils import color_range_rgb_to_8bit_rgb
+
+# TODO: change value names
 
 #################
 ### ply file ###
@@ -96,6 +94,17 @@ class Mesh:
 class Points:
     @staticmethod
     def read(filename: str) -> Tuple[np.ndarray, np.ndarray, dict]:
+        """read a point cloud file.
+
+        Args:
+            file_path: a point cloud file (support: ply, pcd)
+
+        Return:
+            xyz: xyz (N, 3)
+            rgb: colors (M, 3)
+            data: other data
+        """
+
         def _ply(filename):
             plydata = PlyData.read(filename)
             ply_points = plydata["vertex"]
