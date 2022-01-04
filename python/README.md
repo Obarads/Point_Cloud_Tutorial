@@ -2,9 +2,21 @@
 ## Introduction
 This tutorial introduce point cloud processing with python.
 
-## TODO
-- registration.ipynb            : write description.
-- constructing.ipynb            : write description and code.
+## Files
+
+| File names                | status    | TODO                                            |
+| ------------------------- | --------- | ----------------------------------------------- |
+| basic_code.ipynb          | Done      |                                                 |
+| characteristic.ipynb      | Done (ja) | translation to english                          |
+| competition.ipynb         | To do     |                                                 |
+| features.ipynb            | Done (ja) | translation to english and implementation of DL |
+| handcrafted_feature.ipynb | Done (ja) | translation to english                          |
+| nns.ipynb                 | Done (ja) | translation to english                          |
+| normal_estimation.ipynb   | Done (ja) | translation to english and implementation       |
+| registration.ipynb        | To do     | add description                                 |
+| sampling.ipynb            | Done (ja) | translation to english                          |
+| transformations.ipynb     | Done (ja) | translation to english                          |
+| visualization.ipynb       | Done (ja) | translation to english                          |
 
 ## Related work and package
 - Open3D: [ProjectPage](http://www.open3d.org/) | [Code](https://github.com/isl-org/Open3D) | [Docs](http://www.open3d.org/docs/release/)

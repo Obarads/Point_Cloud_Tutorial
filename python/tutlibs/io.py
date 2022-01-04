@@ -136,7 +136,7 @@ class Points:
             return xyz, rgb, data
 
         support = {"ply": _ply, "pcd": _pcd}
-        extension = filename.split(".")[-1]
+        extension = filename.split(".")[-1]  # TODO
         if extension in support:
             xyz, rgb, data = support[extension](filename)
         else:
