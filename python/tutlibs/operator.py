@@ -4,17 +4,15 @@ import numpy as np
 
 
 def dot(a, b, keepdims=False) -> np.ndarray:
-    """Dot product for a and b vectors
-    """
-    res: np.ndarray = np.matmul(a[:, np.newaxis], b[:, :, np.newaxis])
+    """Dot product for a and b vectors"""
+    res: np.ndarray = np.matmul(a[:, np.newaxis, :], b[:, :, np.newaxis])
     if not keepdims:
         res = res.squeeze()
     return res
 
 
 def cross(a, b) -> np.ndarray:
-    """Cross product for a and b vectors
-    """
+    """Cross product for a and b vectors"""
     res: np.ndarray = np.cross(a, b)
     return res
 
@@ -64,10 +62,17 @@ def square_distance(coords1: np.ndarray, coords2: np.ndarray) -> np.ndarray:
         square distances:
             square distances between coords1 and coords2 (N, M)
     """
-    res = -2*np.matmul(coords1, coords2.T)
-    res += np.sum(coords1**2, axis=1, keepdims=True)
-    res += np.sum(coords2**2, axis=1, keepdims=True).T
+    res = -2 * np.matmul(coords1, coords2.T)
+    res += np.sum(coords1 ** 2, axis=1, keepdims=True)
+    res += np.sum(coords2 ** 2, axis=1, keepdims=True).T
     return res
+
+
+def projection(points, centers, normals) -> np.ndarray:
+    """Project points on planes with normals."""
+    plane_point_distances = dot((points - centers), normals) * normals
+    projected_points = points - plane_point_distances
+    return projected_points
 
 
 def gather(points: np.ndarray, idx: np.ndarray) -> np.ndarray:

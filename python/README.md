@@ -16,7 +16,7 @@ This tutorial introduce point cloud processing with python.
 | registration.ipynb        | To do     | add description                                 |
 | sampling.ipynb            | Done (ja) | translation to english                          |
 | transformations.ipynb     | Done (ja) | translation to english                          |
-| visualization.ipynb       | Done (ja) | translation to english                          |
+| visualization.ipynb       | Done      |                                                 |
 
 ## Related work and package
 - Open3D: [ProjectPage](http://www.open3d.org/) | [Code](https://github.com/isl-org/Open3D) | [Docs](http://www.open3d.org/docs/release/)
@@ -31,3 +31,4 @@ This tutorial introduce point cloud processing with python.
 - pptk: [Code](https://github.com/heremaps/pptk)
 - vedo: [Code](https://github.com/marcomusy/vedo)
 - PointMatcher: [ProjectPage](https://libpointmatcher.readthedocs.io/en/latest/)
+- PDAL: [Docs](https://pdal.io/)
