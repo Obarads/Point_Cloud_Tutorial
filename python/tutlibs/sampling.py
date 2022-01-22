@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 
+
 def furthest_point_sampling(coords: np.ndarray, num_sample: int) -> np.ndarray:
     """Furthest point sampling
 
@@ -15,16 +16,16 @@ def furthest_point_sampling(coords: np.ndarray, num_sample: int) -> np.ndarray:
     """
     N, _ = coords.shape
 
-    min_square_dists = np.full(N, 2**16-1, dtype=np.float32)
+    min_square_dists = np.full(N, 2 ** 16 - 1, dtype=np.float32)
     sample_indices = np.zeros(num_sample, dtype=np.int32)
 
     # Get first index
     sample_indices[0] = 0
     for i in range(1, num_sample):
         # compute square distances between coords and previous sample.
-        previous_sample = coords[sample_indices[i-1]]
+        previous_sample = coords[sample_indices[i - 1]]
         relative_coords = coords - previous_sample[np.newaxis, :]
-        square_dists = np.sum(relative_coords**2, axis=1)
+        square_dists = np.sum(relative_coords ** 2, axis=1)
 
         # update minimum distance between coords and samples.
         min_dist_mask = square_dists < min_square_dists
@@ -47,15 +48,17 @@ def voxel_grid_sampling(coords: np.ndarray, voxel_size: float) -> np.ndarray:
         samples: sample coords (M, C)
     """
     N, C = coords.shape
-    
+
     # get voxel indices.
     indices_float = coords / voxel_size
     indices = indices_float.astype(np.int32)
 
     # calculate the average coordinate of the point for each voxel.
     _, voxel_labels = np.unique(indices, axis=0, return_inverse=True)
-    df = pd.DataFrame(data=np.concatenate(
-        [voxel_labels[:, np.newaxis], coords], axis=1), columns=np.arange(C+1))
+    df = pd.DataFrame(
+        data=np.concatenate([voxel_labels[:, np.newaxis], coords], axis=1),
+        columns=np.arange(C + 1),
+    )
     voxel_mean_df = df.groupby(0).mean()
 
     # use average coordinates as samples.
