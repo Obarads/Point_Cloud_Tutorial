@@ -1,8 +1,8 @@
 import numpy as np
 import itertools
 
-from .nns import radius_nearest_neighbors, k_nearest_neighbors
-from .operator import gather, dot, cross, normalize, angle, square_distance
+from .nns import radius_and_k_nearest_neighbors, k_nearest_neighbors
+from .operator import gather, dot, cross, normalize, angle
 
 def pair_feature(xyz:np.ndarray, normals:np.ndarray, pair_idxs:np.ndarray):
     """Compute pair features.
@@ -100,7 +100,7 @@ class PointFeatureHistograms:
         Return:
             point feature histograms: (N, div**3)
         """
-        knn_idxs, _, rnn_masks = radius_nearest_neighbors(xyz, xyz, r=radius, k=xyz.shape[0]) # shpae: (N, N), (N, N)
+        knn_idxs, _, rnn_masks = radius_and_k_nearest_neighbors(xyz, xyz, r=radius, k=xyz.shape[0]) # shpae: (N, N), (N, N)
 
         # Get nearest neihobrs (get radius neihbors).
         num_pf = len(knn_idxs) # num_pf = N = xyz.shape[0]
@@ -152,7 +152,7 @@ class SimplifiedPointFeatureHistogram:
         N, _ = xyz.shape
 
         # radius neighobrs
-        _, _, rnn_masks = radius_nearest_neighbors(xyz, xyz, r=radius, k=xyz.shape[0])
+        _, _, rnn_masks = radius_and_k_nearest_neighbors(xyz, xyz, r=radius, k=xyz.shape[0])
 
         # get pair idxs for radius neighbors
         pair_mask = np.triu(rnn_masks, k=-1) # shape: (N, N)
@@ -205,7 +205,7 @@ class FastPointFeatureHistograms:
         """
         spfh = SimplifiedPointFeatureHistogram.compute(xyz, normals, radius, div) # shape: (N, div**3)
 
-        knn_idxs, knn_dists, rnn_masks = radius_nearest_neighbors(xyz, xyz, r=radius, k=xyz.shape[0]) # shpae: (N, N), (N, N), (N, N)
+        knn_idxs, knn_dists, rnn_masks = radius_and_k_nearest_neighbors(xyz, xyz, r=radius, k=xyz.shape[0]) # shpae: (N, N), (N, N), (N, N)
 
         # Get nearest neihobrs (get radius neihbors).
         num_pf = len(knn_idxs) # num_pf = N = xyz.shape[0]
