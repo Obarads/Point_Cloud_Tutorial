@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse.csgraph import minimum_spanning_tree
 from .nns import k_nearest_neighbors
-from .operator import gather, square_distance
+from .operator import gather, square_distance, dot
 
 # Note:
 # (1) code is same code below:
@@ -152,5 +152,26 @@ def normal_orientation(coords: np.ndarray, normals: np.ndarray):
     tree_weighted_adjacency_matrix = tcsr.toarray()
 
     _normals = tree_recursion(_normals, tree_weighted_adjacency_matrix, 0)
+
+    return _normals
+
+
+def normal_orientation_with_viewpoint(
+    coords: np.ndarray, normals: np.ndarray, viewpoint: np.ndarray
+):
+    """Normal orientation with viewpoint
+
+    Args:
+        coords: xyz coordinates of points, (N, 3)
+        normals: normals of points, (N, 3)
+        viewpoint: view point, (3)
+
+    Returns:
+        oriented_normals: fixed normals(N, 3)
+    """
+    _normals = np.copy(normals)
+    direction_dot = dot(_normals, viewpoint[np.newaxis, :] - coords)
+    orientation_mask = direction_dot > 0
+    _normals[orientation_mask] *= -1
 
     return _normals

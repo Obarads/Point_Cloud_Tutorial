@@ -57,7 +57,18 @@ class Mesh:
         return vertices, triangles, data
 
     @staticmethod
-    def write(filename: str, vertices: np.ndarray, triangles: np.ndarray):
+    def write(
+        filename: str,
+        vertices: np.ndarray,
+        triangles: np.ndarray,
+    ):
+        """write a triangle mesh file.
+
+        Args:
+            filename: a triangle mesh file path (support: ply)
+            vertices: vertices xyz of mesh (N, 3)
+            triangles: triangle edge indices (M, 3)
+        """
         # Vertex
         vertex = []
         vertex_prop = []
@@ -86,7 +97,7 @@ class Mesh:
                 PlyElement.describe(ply_vertex, "vertex"),
                 PlyElement.describe(ply_face, "face"),
             ],
-            text=True,
+            # text=True,
         )
         ply.write(filename)
 
@@ -101,7 +112,7 @@ class Points:
 
         Return:
             xyz: xyz (N, 3)
-            rgb: colors (M, 3)
+            rgb: colors (N, 3)
             data: other data
         """
 
@@ -112,7 +123,9 @@ class Points:
 
             # XYZ
             xyz_properties = ["x", "y", "z"]
-            xyz = np.array([ply_points[c] for c in xyz_properties], dtype=np.float32).T
+            xyz = np.array(
+                [ply_points[c] for c in xyz_properties], dtype=np.float32
+            ).T
 
             # Color
             rgb_properties = ["red", "green", "blue"]
@@ -154,6 +167,13 @@ class Points:
     ):
         """
         Write a point cloud into a ply file.
+
+        Args:
+            file_path: a point cloud file (support: ply)
+            xyz: xyz (N, 3)
+            rgb: colors (N, 3)
+            color_range: minimal and maximum color value
+            additional_data: other data
         """
 
         # Point cloud data and properties for writing
@@ -188,4 +208,6 @@ class Points:
 
 
 if __name__ == "__main__":
-    xyz, colors, _ = Points.read("../../data/pcl_data/biwi_face_database/model.pcd")
+    xyz, colors, _ = Points.read(
+        "../../data/pcl_data/biwi_face_database/model.pcd"
+    )

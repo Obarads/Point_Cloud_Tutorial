@@ -1,7 +1,7 @@
 from typing import Tuple
 import numpy as np
 
-from .operator import dot, gather, projection
+from .operator import gather, projection
 from .distance import hausdorff_distance
 from .nns import k_nearest_neighbors
 from .normal_estimation import normal_estimation_v2, normal_orientation
@@ -17,7 +17,9 @@ def marching_cubes(voxels: np.ndarray):
     voxel_indices = voxel_to_point(voxels).astype(np.int32)
     Nx, Ny, Nz = voxels.shape
     voxel_vertices = np.zeros((Nx + 1, Ny + 1, Nz + 1))
-    voxel_vertices[voxel_indices[:, 0], voxel_indices[:, 1], voxel_indices[:, 2]] = 1
+    voxel_vertices[
+        voxel_indices[:, 0], voxel_indices[:, 1], voxel_indices[:, 2]
+    ] = 1
     voxel_vertices[
         voxel_indices[:, 0] + 1, voxel_indices[:, 1], voxel_indices[:, 2]
     ] = 1
@@ -34,14 +36,18 @@ def marching_cubes(voxels: np.ndarray):
         voxel_indices[:, 0] + 1, voxel_indices[:, 1], voxel_indices[:, 2] + 1
     ] = 1
     voxel_vertices[
-        voxel_indices[:, 0] + 1, voxel_indices[:, 1] + 1, voxel_indices[:, 2] + 1
+        voxel_indices[:, 0] + 1,
+        voxel_indices[:, 1] + 1,
+        voxel_indices[:, 2] + 1,
     ] = 1
     voxel_vertices[
         voxel_indices[:, 0], voxel_indices[:, 1] + 1, voxel_indices[:, 2] + 1
     ] = 1
 
     x_arange = np.tile(np.arange(Nx), (Ny * Nz))
-    y_arange = np.tile(np.tile(np.arange(Ny)[:, np.newaxis], (1, Nx)).reshape(-1), (Nz))
+    y_arange = np.tile(
+        np.tile(np.arange(Ny)[:, np.newaxis], (1, Nx)).reshape(-1), (Nz)
+    )
     z_arange = np.tile(np.arange(Nz)[:, np.newaxis], (1, Nx * Ny)).reshape(-1)
     voxel_arange = np.stack([x_arange, y_arange, z_arange], axis=-1)
 
@@ -56,7 +62,9 @@ def marching_cubes(voxels: np.ndarray):
         + voxel_vertices[x_arange, y_arange + 1, z_arange + 1] * (2 ** 7)
     ).astype(np.int32)
 
-    tri_indices = np.tile(np.arange(Nx * Ny * Nz)[:, np.newaxis], (1, len(TriTable[0])))
+    tri_indices = np.tile(
+        np.arange(Nx * Ny * Nz)[:, np.newaxis], (1, len(TriTable[0]))
+    )
     tri_indices = tri_indices.reshape(-1)
     rows = TriTable[tri_table_indices]
     rows = rows.reshape(-1)
@@ -74,8 +82,11 @@ def marching_cubes(voxels: np.ndarray):
 
 
 def mesh_to_point(
-    vertices: np.ndarray, triangles: np.ndarray, num_samples: int
-) -> np.ndarray:
+    vertices: np.ndarray,
+    triangles: np.ndarray,
+    num_samples: int,
+    return_triangle_indices: bool = False,
+):
     """Sample a point cloud from a mesh data.
 
     Args:
@@ -108,15 +119,20 @@ def mesh_to_point(
     )
     triangle_vertices = triangle_vertices[triangle_indices]
 
-    # compute points on triangle meshs
+    # compute points on faces
     uvw = np.random.rand(num_samples, 3)
     uvw /= np.sum(uvw, axis=1, keepdims=True)
     point_cloud = np.sum(uvw[:, :, np.newaxis] * triangle_vertices, axis=1)
 
-    return point_cloud
+    if return_triangle_indices:
+        return point_cloud, triangle_indices
+    else:
+        return point_cloud
 
 
-def mesh_to_voxel(vertices: np.ndarray, triangles: np.ndarray, voxel_size: float):
+def mesh_to_voxel(
+    vertices: np.ndarray, triangles: np.ndarray, voxel_size: float
+):
     # for triangle in triangles:
     #     v3 = vertices[triangle]
     #     v3_min = np.min(v3, axis=0)
@@ -135,7 +151,9 @@ def voxel_to_point(voxel: np.ndarray) -> np.ndarray:
     """
     side_len = len(voxel)
     side_idxs = np.arange(side_len)
-    x_idxs = np.tile(side_idxs[np.newaxis, np.newaxis, :], (side_len, side_len, 1))
+    x_idxs = np.tile(
+        side_idxs[np.newaxis, np.newaxis, :], (side_len, side_len, 1)
+    )
     y_idxs = np.transpose(x_idxs, (1, 2, 0))
     z_idxs = np.transpose(x_idxs, (2, 0, 1))
     sides_idxs = np.stack((x_idxs, y_idxs, z_idxs), axis=-1).astype(np.float32)
@@ -178,7 +196,9 @@ def point_to_image(
     rt_mat = np.concatenate([rot_mat, trans_mat[:, np.newaxis]], axis=1)
     pixel_coords = np.matmul(
         np.matmul(intrinsic_matrix, rt_mat),
-        np.concatenate([point_cloud, np.full((len(point_cloud), 1), 1)], axis=1).T,
+        np.concatenate(
+            [point_cloud, np.full((len(point_cloud), 1), 1)], axis=1
+        ).T,
     ).T
     pixel_coords = pixel_coords[:, :2] / pixel_coords[:, 2][:, np.newaxis]
     pixel_coords = np.array([[img_x, img_y]]) - pixel_coords[:, :2]
@@ -188,7 +208,9 @@ def point_to_image(
     pixel_indices = pixel_indices[pixel_indices[:, 0] >= 0]
     pixel_indices = pixel_indices[pixel_indices[:, 1] < img_y]
     pixel_indices = pixel_indices[pixel_indices[:, 1] >= 0]
-    img[pixel_indices[:, 1], pixel_indices[:, 0]] = np.array([0, 0, 0], dtype=np.int32)
+    img[pixel_indices[:, 1], pixel_indices[:, 0]] = np.array(
+        [0, 0, 0], dtype=np.int32
+    )
 
     return img, pixel_indices
 
@@ -208,9 +230,13 @@ def point_to_voxel(point_cloud: np.ndarray, voxel_size: float) -> np.ndarray:
     min_index = np.min(voxel_grid_indices, axis=0)
     voxel_grid_indices -= min_index
     voxel_length = np.max(voxel_grid_indices) + 1
-    voxels = np.zeros((voxel_length, voxel_length, voxel_length), dtype=np.uint8)
+    voxels = np.zeros(
+        (voxel_length, voxel_length, voxel_length), dtype=np.uint8
+    )
     voxels[
-        voxel_grid_indices[:, 0], voxel_grid_indices[:, 1], voxel_grid_indices[:, 2]
+        voxel_grid_indices[:, 0],
+        voxel_grid_indices[:, 1],
+        voxel_grid_indices[:, 2],
     ] = 1
     return voxels
 
@@ -273,7 +299,12 @@ def point_to_mesh(coords: np.ndarray, points: np.ndarray):
 
 
 def depth_to_point(
-    depth_image: np.ndarray, fx: float, fy: float, cx: float, cy: float, S: float = 1
+    depth_image: np.ndarray,
+    fx: float,
+    fy: float,
+    cx: float,
+    cy: float,
+    S: float = 1,
 ):
     """Construct a point cloud from a depth image.
 
@@ -302,8 +333,12 @@ def depth_to_point(
     pixel_coords = (
         np.concatenate(
             [
-                np.tile(np.arange(img_x)[:, np.newaxis, np.newaxis], (1, img_y, 1)),
-                np.tile(np.arange(img_y)[np.newaxis, :, np.newaxis], (img_x, 1, 1)),
+                np.tile(
+                    np.arange(img_x)[:, np.newaxis, np.newaxis], (1, img_y, 1)
+                ),
+                np.tile(
+                    np.arange(img_y)[np.newaxis, :, np.newaxis], (img_x, 1, 1)
+                ),
                 np.full((img_x, img_y, 2), fill_value=1),
             ],
             axis=2,
