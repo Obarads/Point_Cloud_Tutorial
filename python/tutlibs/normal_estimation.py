@@ -29,9 +29,8 @@ def normal_estimation(coords: np.ndarray, k: int = 10) -> np.ndarray:
     deviation_t = deviation.transpose(0, 2, 1)
     covariance_matrixs = np.matmul(deviation_t, deviation) / k  # (N, 3, 3)
 
-    # Get eigenvector and eigenvalue of each point
+    # Get eigenvector and eigenvalue for each point
     w, v = np.linalg.eig(covariance_matrixs.transpose(0, 2, 1))
-    # w, v = np.linalg.eig(covariance_matrixs)
     w_min_idxs = np.argmin(w, axis=1)
 
     # Get normal of each point (1)
@@ -67,7 +66,6 @@ def normal_estimation_v2(
 
     # Get eigenvector and eigenvalue of each point
     w, v = np.linalg.eig(covariance_matrixs.transpose(0, 2, 1))
-    # w, v = np.linalg.eig(covariance_matrixs)
     w_min_idxs = np.argmin(w, axis=1)
 
     # Get normal of each point (1)

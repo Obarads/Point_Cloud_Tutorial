@@ -45,7 +45,7 @@ class TransformationMatrix:
             transformation matrix, (4, 4)
         """
         matrix_4x4 = np.identity(4)
-        matrix_4x4[:, :3] *= vector_3[:, np.newaxis]
+        matrix_4x4[:, :3] *= vector_3[np.newaxis, :]
         return matrix_4x4
 
     @staticmethod
