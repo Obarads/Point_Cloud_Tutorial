@@ -17,22 +17,26 @@ You can execute most tutorial codes on [Codespaces](https://github.com/features/
 ### 2. About tutorial
 Tutorial contents are as follows:
 
-| Theme               | Page & code                                | Abstract                                                      | Todo                                        |
-| ------------------- | ------------------------------------------ | ------------------------------------------------------------- | ------------------------------------------- |
-| basic code          | [python](python/basic_code.ipynb)          | We introduce basic code used in this tutorial.                |                                             |
-| characteristic      | [python](python/characteristic.ipynb)      | Done (ja)                                                     | translation to english                      |
-| competition         | [python](python/competition.ipynb)         | To do                                                         |                                             |
-| handcrafted feature | [python](python/handcrafted_feature.ipynb) | Done (ja)                                                     | translation to english                      |
-| deep learning       | [python](python/deep_learning.ipynb)       | To do                                                         |                                             |
-| nns                 | [python](python/nns.ipynb)                 | Nearest neighbors search                                      |                                             |
-| normal estimation   | [python](python/normal_estimation.ipynb)   | Normal estimation with a point cloud                          |                                             |
-| registration        | [python](python/registration.ipynb)        | To do                                                         | add description                             |
-| downsampling        | [python](python/downsampling.ipynb)        | Downsampling for point cloud processing                       |                                             |
-| transformations     | [python](python/transformations.ipynb)     | Transfomation and Transfomation matrix                        | add 2D-3D transfomation (from constructing) |
-| visualization       | [python](python/visualization.ipynb)       | Visualization functions in the repository                     |                                             |
-| constructing        | [python](python/constructing.ipynb)        | Constructing 3D/2.5D representation from other representation | add description                             |
-
-
+| Theme                                | Page & code                                    | Contents                                                                                     | Todo                   |
+| ------------------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------- |
+| Basic code                           | [python](python/basic_code.ipynb)              | We introduce basic code used in this tutorial.                                               |                        |
+| Characteristic                       | [python](python/characteristic.ipynb)          | Done (ja)                                                                                    | translation to english |
+| Competition                          | [python](python/competition.ipynb)             | None                                                                                         | None                   |
+| Handcrafted feature                  | [python](python/handcrafted_feature.ipynb)     | FPH, PPF                                                                                     |                        |
+| Deep learning                        | [python](python/deep_learning.ipynb)           | None                                                                                         | add PointNet           |
+| Nearest neighbors search             | [python](python/nns.ipynb)                     | kNN, Radius Search, Hybrid Search                                                            |                        |
+| Normal estimation                    | [python](python/normal_estimation.ipynb)       | Estimation with PCA, Normal re-orientation methods                                           |                        |
+| Downsampling                         | [python](python/downsampling.ipynb)            | Random Sampling, Furthest point sampling, Voxel grid sampling                                |                        |
+| Visualization                        | [python](python/visualization.ipynb)           | Visualization functions in the repository                                                    |                        |
+| Transformation/Affine transformation | [python](python/affine_transformations.ipynb)  | Affine transformation, Transformation matrix                                                 |                        |
+| Transformation/Camera projection     | [python](python/camera_projection.ipynb)       | Camera projection                                                                            |                        |
+| Task/Reconstruction                  | [python](python/reconstruction.ipynb)          | Marching cube, meshes to points                                                              | add description        |
+| Task/Registration                    | [python](python/registration.ipynb)            | ICP, RANSAC with Handcrafted features                                                        | add description        |
+| Dataset/Pix3D                        | [python](python/datasets/pix3d.ipynb)          | [Pix3D: Dataset and Methods for Single-Image 3D Shape Modeling](http://pix3d.csail.mit.edu/) |                        |
+| Dataset/Redwood 3DScan               | [python](python/datasets/redwood_3dscan.ipynb) | [A Large Dataset of Object Scans](http://redwood-data.org/3dscan/)                           |                        |
+| Dataset/Redwood Indoor               | [python](python/datasets/redwood_indoor.ipynb) | [Robust Reconstruction of Indoor Scenes](http://redwood-data.org/indoor/index.html)          |                        |
+| Dataset/ScanNet                      | [python](python/datasets/scannet.ipynb)        | [ScanNet: Richly-annotated 3D Reconstructions of Indoor Scenes](http://www.scan-net.org/)    |                        |
+| Dataset/Sun3D                        | [python](python/datasets/sun3d.ipynb)          | [SUN3D database](http://sun3d.cs.princeton.edu/)                                             |                        |
 
 ## About correction
 If you finded any corrections, let us know in Issues.

@@ -66,14 +66,14 @@ class Pix3D:
     def __getitem__(self, idx: int) -> Pix3DData:
         info = self.info[idx]
         image = cv2.cvtColor(
-            cv2.imread(opj(self.dataset_dir_path, data.info["img"])),
+            cv2.imread(opj(self.dataset_dir_path, info["img"])),
             cv2.COLOR_BGR2RGB,
         )
-        mask = cv2.imread(opj(self.dataset_dir_path, data.info["mask"]))
+        mask = cv2.imread(opj(self.dataset_dir_path, info["mask"]))
         voxel = scipy.io.loadmat(
-            opj(self.dataset_dir_path, data.info["voxel"])
+            opj(self.dataset_dir_path, info["voxel"])
         )["voxel"]
-        mesh = Mesh.read(opj(self.dataset_dir_path, data.info["model"]))
+        mesh = Mesh.read(opj(self.dataset_dir_path, info["model"]))
 
         data = Pix3DData(
             info=info, image=image, mask=mask, voxel=voxel, mesh=mesh

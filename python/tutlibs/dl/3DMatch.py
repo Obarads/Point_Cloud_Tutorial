@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 from torch.utils.data import Dataset
-from ..constructing import point_to_voxel
 
 
 class SiameseNetwork(nn.Module):

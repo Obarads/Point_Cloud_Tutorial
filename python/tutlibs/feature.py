@@ -24,40 +24,44 @@ def pair_feature(xyz: np.ndarray, normals: np.ndarray, pair_idxs: np.ndarray):
     """
 
     # Get xyz and normal of points
-    point_1_indices = pair_idxs[:, 0]
-    point_2_indices = pair_idxs[:, 1]
-    p1 = xyz[point_1_indices]
-    n1 = normals[point_1_indices]
-    p2 = xyz[point_2_indices]
-    n2 = normals[point_2_indices]
+    point_i_indices = pair_idxs[:, 0]
+    point_j_indices = pair_idxs[:, 1]
+    pi = xyz[point_i_indices]
+    ni = normals[point_i_indices]
+    pj = xyz[point_j_indices]
+    nj = normals[point_j_indices]
 
     # Get vectors (pp) and distances (dists) between pt and ps
-    pp = p2 - p1
-    dists = np.linalg.norm(pp, ord=2, axis=1)
+    # pp1 = p2 - p1
+    # dists1 = np.linalg.norm(pp1, ord=2, axis=1)
 
     # Get a mask to decide the source and target points.
-    p1pp_angle = dot(n1, pp) / dists
-    p2pp_angle = dot(n2, pp) / dists
-    mask = np.arccos(np.fabs(p1pp_angle)) > np.arccos(np.fabs(p2pp_angle))
+    pji = pj - pi
+    pij = pi - pj
+    nipji_dot = dot(ni, pji)
+    njpij_dot = dot(nj, pij)
+    mask = nipji_dot > njpij_dot
 
     # Decide source and target points.
-    phi = p1pp_angle.copy()
-    u = n1.copy()  # u = ns
-    nt = n2.copy()
-    u[mask] = n2[mask].copy()
-    nt[mask] = n1[mask].copy()
-    pp[mask] *= -1
-    phi[mask] = -1 * p2pp_angle[mask]
+    u = ni.copy()
+    u[mask] = nj[mask].copy()
 
-    # Compute v and w
-    v = normalize(cross(pp, u))
+    pts = pji.copy()
+    pts[mask] = pij[mask].copy()
+
+    nt = nj.copy()
+    nt[mask] = ni[mask].copy()
+
+    v = cross(pts, u)
     w = cross(u, v)
 
-    # Get alpha and theta
-    alpha = dot(v, nt)
-    theta = np.arctan2(dot(w, nt), dot(u, nt))
+    # Get f1, f2, f3, f4
+    f1 = dot(v, nt)
+    f2 = np.linalg.norm(pts, ord=2, axis=1)
+    f3 = dot(u, pts) / f2
+    f4 = np.arctan2(dot(w, nt), dot(u, nt))
 
-    return phi, alpha, theta, dists
+    return f1, f2, f3, f4
 
 
 def fminmax(arr: np.ndarray, min_value: float, max_value: float):
@@ -130,7 +134,7 @@ class PointFeatureHistograms:
                 pair_idxs = np.array(
                     list(itertools.combinations(range(len(rnn_xyz)), 2))
                 )  # shape: (T, 2), T=Number of combinations
-                phi, alpha, theta, _ = pair_feature(
+                alpha, _, phi, theta = pair_feature(
                     rnn_xyz, rnn_normal, pair_idxs
                 )  # shape: (T), (T), (T), (T)
 
@@ -203,7 +207,7 @@ class SimplifiedPointFeatureHistogram:
 
         # compute pair features
         if len(pair_idxs) >= 1:
-            phi, alpha, theta, _ = pair_feature(xyz, normals, pair_idxs)
+            alpha, _, phi, theta = pair_feature(xyz, normals, pair_idxs)
             pair_features = np.stack((phi, alpha, theta), axis=-1)
             nn_arr = np.zeros((N, N, 3), dtype=pair_features.dtype)
             nn_arr[pair_idxs[:, 0], pair_idxs[:, 1]] = pair_features
