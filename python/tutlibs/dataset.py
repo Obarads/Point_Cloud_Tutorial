@@ -9,7 +9,8 @@ import re
 from requests.models import Response
 import zipfile
 import glob
-from typing import List, Tuple
+from tqdm import tqdm
+from typing import List
 from dataclasses import dataclass
 
 from .io import Mesh, Points
@@ -20,6 +21,7 @@ def download_data(
     output_dir_path: str,
     extract_zip: bool = False,
     remove_zip: bool = False,
+    verify:bool=True,
 ):
     # download
     file_name = os.path.basename(url)
@@ -28,9 +30,9 @@ def download_data(
         print(f"skip download of {url}")
     else:
         os.makedirs(output_dir_path, exist_ok=True)
-        response: Response = requests.get(url, stream=True)
+        response: Response = requests.get(url, stream=True, verify=verify)
         with open(output_file_path, "wb") as fd:
-            for chunk in response.iter_content(2048):
+            for chunk in tqdm(response.iter_content(8192), desc=f"download {file_name}", ncols=60):
                 fd.write(chunk)
 
     # extract

@@ -1,8 +1,6 @@
 import time
 import numpy as np
 
-import torch
-
 
 def single_color(color, num_points: int):
     """
@@ -47,8 +45,3 @@ def time_watcher(previous_time=None, print_key=""):
     else:
         print("{}: {}".format(print_key, current_time - previous_time))
     return current_time
-
-
-def t2n(torch_tensor: torch.Tensor) -> np.ndarray:
-    """torch.Tensor to numpy.ndarray"""
-    return torch_tensor.detach().cpu().numpy()
