@@ -81,7 +81,8 @@ class TransformationMatrix:
 class Transformation:
     @staticmethod
     def translation(xyz: np.ndarray, vector: np.ndarray) -> np.ndarray:
-        """Shift xyz.
+        """translate xyz coordinates.
+
         Args:
             xyz: (N, 3)
             vector: (3)

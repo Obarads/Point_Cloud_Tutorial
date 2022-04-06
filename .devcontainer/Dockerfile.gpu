@@ -22,7 +22,7 @@ ENV HOME /workspace
 RUN groupadd -g ${GID} host-group && \
     useradd -u ${UID} --create-home -G sudo,root,${GID} -m user && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
-    chmod 777 /workspace/
+    chmod 777 /workspace/ && \
     chown -R user /opt/
 USER ${UID}
 ENV SHELL /bin/bash
