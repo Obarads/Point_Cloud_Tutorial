@@ -26,7 +26,7 @@ You can create a GPU enviroment with docker commands.
     docker exec pct_gpu sh /workspace/Point_Cloud_Tutorial/.devcontainer/python_packages.sh gpu
 
     # Optional settings for Codespaces bash prompt theme
-    docker pct_gpu sh /workspace/Point_Cloud_Tutorial/.devcontainer/optional_setting.sh
+    docker exec pct_gpu sh /workspace/Point_Cloud_Tutorial/.devcontainer/optional_setting.sh
     ```
 
 ## About tutorial directory and files

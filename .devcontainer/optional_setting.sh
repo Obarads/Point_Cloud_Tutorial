@@ -24,5 +24,5 @@ __bash_prompt() {
 }
 __bash_prompt
 EOF
-)" && echo "${codespaces_bash}" >> "/home/user/.bashrc"
+)" && echo "${codespaces_bash}" >> "/workspace/.bashrc"
 
