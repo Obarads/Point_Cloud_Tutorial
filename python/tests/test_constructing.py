@@ -2,7 +2,7 @@ import os
 from os.path import join as opj
 import numpy as np
 
-from tutlibs.constructing import mesh_to_point, point_to_voxel
+from tutlibs.reconstruction import mesh_to_point, point_to_voxel
 from tutlibs.io import Mesh, Points
 from tutlibs.visualization import JupyterVisualizer as jv
 

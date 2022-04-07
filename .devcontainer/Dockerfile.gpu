@@ -2,37 +2,27 @@ FROM pytorch/pytorch:1.9.0-cuda11.1-cudnn8-devel
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# install ubuntu package
+# install ubuntu package and clean
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     wget \
     ninja-build \
-    libpcl-dev
-
-# clean
-RUN apt-get autoremove -y && \
+    libpcl-dev \
+    sudo \
+    git && \
+    apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# [Optional] User setting
 ARG UID=1000
 ARG GID=1000
-
-RUN groupadd -g ${GID} host-group
-RUN useradd -u ${UID} -g ${GID} -m user
-RUN gpasswd -a user sudo
-RUN echo "user:qwer1234" | chpasswd
+ENV HOME /workspace
+RUN groupadd -g ${GID} host-group && \
+    useradd -u ${UID} --create-home -G sudo,root,${GID} -m user && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+    chmod 777 /workspace/ && \
+    chown -R user /opt/
 USER ${UID}
-ENV HOME /home/user
 ENV SHELL /bin/bash
-
-# install python packages
-## Create python3.8 env
-RUN conda update -n base -c defaults conda && \
-    conda create python=3.8 -n pct_gpu -y
-SHELL ["conda", "run", "-n", "pct_gpu", "/bin/bash", "-c"]
-
-## set 
-RUN echo "\n\
-    conda activate pct_gpu \n\
-    " >> /home/user/.bashrc

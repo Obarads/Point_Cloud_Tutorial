@@ -19,6 +19,8 @@ outputs/
 /data/pix3d
 /data/pix3d.zip
 /data/redwood-3dscan/
+/data/redwood-indoor/
 /data/ScanNet
 /data/kitti
 /data/sun3d
+/data/modelnet40_ply_hdf5_2048
