@@ -1,7 +1,6 @@
 from plyfile import PlyData, PlyElement
 import numpy as np
 import open3d as o3d
-import scipy
 from typing import Dict, Tuple
 
 from .utils import color_range_rgb_to_8bit_rgb

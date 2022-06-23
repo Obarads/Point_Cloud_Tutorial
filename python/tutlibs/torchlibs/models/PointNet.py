@@ -42,6 +42,42 @@ class MLP(nn.Module):
         return self.net(x)
 
 
+class FCL(nn.Module):
+    """FUlly connected layer module"""
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        use_batch_norm: bool = True,
+        act: nn.Module = nn.ReLU(inplace=True),
+    ):
+        super().__init__()
+
+        # define a list for a FCL
+        module_list = []
+
+        # define a linear
+        linear = nn.Linear(in_channels, out_channels)
+        nn.init.xavier_uniform_(linear.weight)
+        module_list.append(linear)
+
+        # define a batch norm
+        if use_batch_norm:
+            norm = nn.BatchNorm1d(out_channels)
+            module_list.append(norm)
+
+        # define an activation function
+        if act is not None:
+            module_list.append(act)
+
+        # define MLP
+        self.net = nn.Sequential(*module_list)
+
+    def forward(self, x):
+        return self.net(x)
+
+
 class InputTransformNet(nn.Module):
     """
     Transform network for XYZ coordinate.
@@ -58,19 +94,15 @@ class InputTransformNet(nn.Module):
         )
 
         # layers after a max-pooling
-        last_layer = nn.Conv1d(256, 9, 1)
-        # last_layer.bias += torch.autograd.Variable(
-            # torch.eye(3, dtype=torch.float32).flatten()
-        # ,requires_grad=True)
         self.decoder = nn.Sequential(
-            MLP(1024, 512),
-            MLP(512, 256),
-            last_layer,
+            FCL(1024, 512),
+            FCL(512, 256),
+            nn.Linear(256, 9),
         )
 
     def forward(self, x):
         x = self.encoder(x)
-        x = torch.amax(x, dim=2, keepdim=True)
+        x = torch.amax(x, dim=2)
         x = self.decoder(x)
         x = torch.reshape(x, (-1, 3, 3))
         x += torch.eye(3, dtype=x.dtype, device=x.device)[None, :, :]
@@ -93,14 +125,10 @@ class FeatureTransformNet(nn.Module):
         )
 
         # layers after a max-pooling
-        last_layer = nn.Conv1d(256, k * k, 1)
-        # last_layer.bias += nn.Parameter(
-        #     torch.eye(k * k, dtype=torch.float32, requires_grad=True).flatten()
-        # )
         self.decoder = nn.Sequential(
-            MLP(1024, 512),
-            MLP(512, 256),
-            last_layer,
+            FCL(1024, 512),
+            FCL(512, 256),
+            nn.Linear(256, k * k),
         )
 
         # args
@@ -108,7 +136,7 @@ class FeatureTransformNet(nn.Module):
 
     def forward(self, x):
         x = self.encoder(x)
-        x = torch.amax(x, dim=2, keepdim=True)
+        x = torch.amax(x, dim=2)
         x = self.decoder(x)
         x = torch.reshape(x, (-1, self.k, self.k))
         x += torch.eye(self.k, dtype=x.dtype, device=x.device)[None, :, :]
@@ -153,7 +181,7 @@ class PointNetExtractor(nn.Module):
             x: (B, C, N)
 
         Returns:
-            x: global features, (B, 1024, 1)
+            x: global features, (B, 1024)
             coord_trans: outputs of input transform network, (B, 3, 3)
             feature_trans: outputs of feature transform network, (B, 64, 64)
         """
@@ -176,7 +204,7 @@ class PointNetExtractor(nn.Module):
         x = self.encoder2(x)
 
         # get a global feature
-        x = torch.amax(x, dim=2, keepdim=True)
+        x = torch.amax(x, dim=2)
 
         return (
             x,
@@ -217,12 +245,11 @@ class PointNetClassification(nn.Module):
         )
 
         self.decoder = nn.Sequential(
-            MLP(1024, 512, use_batch_norm=False),
+            FCL(1024, 512),
             nn.Dropout(p=0.3),
-            MLP(512, 256, use_batch_norm=False),
+            FCL(512, 256),
             nn.Dropout(p=0.3),
-            # MLP(256, num_classes),
-            MLP(256, num_classes, use_batch_norm=False, act=None),
+            nn.Linear(256, num_classes)
         )
 
         self.num_classes = num_classes
@@ -244,6 +271,5 @@ class PointNetClassification(nn.Module):
 
         x, coord_trans, feat_trans = self.encoder(inputs)
         output = self.decoder(x)
-        output = torch.squeeze(output, dim=2)
 
         return output, coord_trans, feat_trans

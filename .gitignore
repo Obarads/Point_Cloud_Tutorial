@@ -24,3 +24,4 @@ outputs/
 /data/kitti
 /data/sun3d
 /data/modelnet40_ply_hdf5_2048
+/data/3dshapenetscode
