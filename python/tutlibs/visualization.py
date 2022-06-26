@@ -1,4 +1,3 @@
-from matplotlib.pyplot import axis
 import numpy as np
 import k3d
 from typing import List

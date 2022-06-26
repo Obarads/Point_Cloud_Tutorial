@@ -1,3 +1,6 @@
+import path
+
+import argparse
 import os
 from tqdm import tqdm
 import numpy as np
@@ -7,15 +10,13 @@ from torch.utils.data import DataLoader
 from torch import optim
 from torch import nn
 
-from tutlibs.dl.PointNet import PointNetClassification
-from tutlibs.dl.dataset import (
-    ModelNet40Dataset,
+from tutlibs.torchlibs.models.PointNet import PointNetClassification
+from tutlibs.torchlibs.dataset import (
+    ModelNet40DatasetForPointNet,
     rotate_point_cloud,
     jitter_point_cloud,
 )
-from tutlibs.dl.loss import feature_transform_regularizer
-from tutlibs.dl.utils import t2n
-from tutlibs.io import Points
+from tutlibs.torchlibs.loss import feature_transform_regularizer
 
 
 def collate_fn(batch):
@@ -33,29 +34,28 @@ def collate_fn(batch):
     return point_clouds, labels
 
 
-def test():
-    device = 0
-    output_dir_path = "outputs/PointNet/"
-    dataset_dir_path = "../data/modelnet40_ply_hdf5_2048/"
-    num_points = 1024
-    num_classes = 40
-
-    os.makedirs(output_dir_path, exist_ok=True)
-
-    dataset = ModelNet40Dataset(dataset_dir_path, mode="test")
+def test(
+    device: int,
+    dataset_dir_path: str,
+    model_file_path: str,
+    num_points: int = 1024,
+    num_classes=40,
+):
+    dataset = ModelNet40DatasetForPointNet(dataset_dir_path, mode="test")
 
     model = PointNetClassification(num_classes)
     model = model.to(device=device)
-    checkpoint = torch.load(os.path.join(output_dir_path, "model_path.pth"))
+    checkpoint = torch.load(model_file_path)
     model.load_state_dict(checkpoint["model"])
-
-    loader = DataLoader(dataset, 32, shuffle=False)
     model.eval()
+
+    loader = DataLoader(dataset, 32, shuffle=False, num_workers=16)
+    loader = tqdm(loader, desc="test", ncols=60)
 
     results = []
 
     with torch.no_grad():
-        for data in tqdm(loader, desc="test", ncols=60):
+        for data in loader:
             point_clouds, gt_labels = data
 
             point_clouds = point_clouds[:, 0:num_points]
@@ -73,23 +73,26 @@ def test():
     print(f"accuracy: {acc}")
 
 
-def main():
-    epochs = 250
-    device = 0
-    output_dir_path = "outputs/PointNet"
-    dataset_dir_path = "../data/modelnet40_ply_hdf5_2048/"
-    num_points = 1024
-    num_classes = 40
-
+def train(
+    device: int,
+    output_dir_path: str,
+    dataset_dir_path: str,
+    num_points: int = 1024,
+    num_classes=40,
+    epochs=250,
+):
     os.makedirs(output_dir_path, exist_ok=True)
-
-    train_dataset = ModelNet40Dataset(dataset_dir_path, mode="train")
-    test_dataset = ModelNet40Dataset(dataset_dir_path, mode="test")
 
     model = PointNetClassification(num_classes)
     model = model.to(device=device)
 
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=0.001,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=1e-4,
+    )
 
     scheduler = optim.lr_scheduler.StepLR(
         optimizer,
@@ -100,16 +103,23 @@ def main():
     loss_ce = nn.CrossEntropyLoss()
     loss_ftr = feature_transform_regularizer
 
-    for epoch in range(epochs):
+    train_dataset = ModelNet40DatasetForPointNet(dataset_dir_path, mode="train")
+    epochs = tqdm(range(epochs), desc="train", ncols=60)
+
+    for epoch in epochs:
         # train
-        loader = DataLoader(train_dataset, 32, shuffle=True, collate_fn=collate_fn)
+        loader = DataLoader(
+            train_dataset,
+            32,
+            shuffle=True,
+            collate_fn=collate_fn,
+            num_workers=16,
+        )
         model.train()
         for data in loader:
             optimizer.zero_grad()
 
             point_clouds, gt_labels = data
-
-            # Points.write("outputs/test.ply",t2n(point_clouds[0]))
 
             point_clouds = point_clouds[:, 0:num_points]
             point_clouds = point_clouds.to(device=device).transpose(1, 2)
@@ -126,30 +136,6 @@ def main():
 
         scheduler.step()
 
-
-        # test
-        loader = DataLoader(test_dataset, 32, shuffle=False)
-        model.eval()
-        results = []
-        with torch.no_grad():
-            for data in loader:
-                point_clouds, gt_labels = data
-
-                point_clouds = point_clouds[:, 0:num_points]
-                point_clouds = torch.transpose(point_clouds, 1, 2).to(
-                    device, dtype=torch.float32
-                )
-                gt_labels = gt_labels.to(device, dtype=torch.long)
-
-                net_output, _, _ = model(point_clouds)
-                pred_labels = torch.argmax(net_output, dim=1)
-                results.append(pred_labels == gt_labels)
-
-        results = torch.cat(results, dim=0)
-        acc = torch.sum(results) / len(results) * 100
-        print(f"Epoch: {epoch}/{epochs}, accuracy: {acc}")
-
-
     torch.save(
         {
             "epoch": epoch,
@@ -157,7 +143,47 @@ def main():
             "optimizer": optimizer.state_dict(),
             "scheduler": scheduler.state_dict(),
         },
-        os.path.join(output_dir_path, "model_path.pth"),
+        os.path.join(output_dir_path, "model.pth"),
     )
 
-main()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="train",
+        help="select `train` or `test` process",
+        choices=["train", "test"],
+    )
+    parser.add_argument(
+        "--device",
+        type=int,
+        default=0,
+        help="gpu device number",
+    )
+    parser.add_argument(
+        "--output_dir_path",
+        type=str,
+        default="outputs/pointnet/",
+    )
+    parser.add_argument(
+        "--test_model_file_path",
+        type=str,
+        default="outputs/pointnet/model.pth",
+        help="trained param file (model.pth) path, only mode=test"
+    )
+    parser.add_argument(
+        "--dataset_dir_path",
+        type=str,
+        default="../../data/modelnet40_ply_hdf5_2048/",
+    )
+    args = parser.parse_args()
+
+    if args.mode == "train":
+        train(args.device, args.output_dir_path, args.dataset_dir_path)
+    elif args.mode == "test":
+        test(args.device, args.dataset_dir_path, args.test_model_file_path)
+    else:
+        raise ValueError()
+
