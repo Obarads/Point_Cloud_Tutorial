@@ -1,5 +1,4 @@
 import os
-from os.path import join as opj
 import numpy as np
 import json
 import cv2
@@ -21,18 +20,22 @@ def download_data(
     output_dir_path: str,
     extract_zip: bool = False,
     remove_zip: bool = False,
-    verify:bool=True,
+    verify: bool = True,
 ):
     # download
     file_name = os.path.basename(url)
-    output_file_path = opj(output_dir_path, file_name)
+    output_file_path = os.path.join(output_dir_path, file_name)
     if os.path.exists(output_file_path):
         print(f"skip download of {url}")
     else:
         os.makedirs(output_dir_path, exist_ok=True)
         response: Response = requests.get(url, stream=True, verify=verify)
         with open(output_file_path, "wb") as fd:
-            for chunk in tqdm(response.iter_content(8192), desc=f"download {file_name}", ncols=60):
+            for chunk in tqdm(
+                response.iter_content(8192),
+                desc=f"download {file_name}",
+                ncols=60,
+            ):
                 fd.write(chunk)
 
     # extract
@@ -59,7 +62,7 @@ class Pix3D:
         self.dataset_dir_path = dataset_dir_path
 
         # loading data infomation (ex: category, img_size, voxel_path ... etc.)
-        with open(opj(self.dataset_dir_path, "pix3d.json"), "r") as f:
+        with open(os.path.join(self.dataset_dir_path, "pix3d.json"), "r") as f:
             self.info = json.load(f)
 
     def __len__(self):
@@ -68,14 +71,14 @@ class Pix3D:
     def __getitem__(self, idx: int) -> Pix3DData:
         info = self.info[idx]
         image = cv2.cvtColor(
-            cv2.imread(opj(self.dataset_dir_path, info["img"])),
+            cv2.imread(os.path.join(self.dataset_dir_path, info["img"])),
             cv2.COLOR_BGR2RGB,
         )
-        mask = cv2.imread(opj(self.dataset_dir_path, info["mask"]))
+        mask = cv2.imread(os.path.join(self.dataset_dir_path, info["mask"]))
         voxel = scipy.io.loadmat(
-            opj(self.dataset_dir_path, info["voxel"])
+            os.path.join(self.dataset_dir_path, info["voxel"])
         )["voxel"]
-        mesh = Mesh.read(opj(self.dataset_dir_path, info["model"]))
+        mesh = Mesh.read(os.path.join(self.dataset_dir_path, info["model"]))
 
         data = Pix3DData(
             info=info, image=image, mask=mask, voxel=voxel, mesh=mesh
@@ -98,11 +101,11 @@ class Redwood3DScan:
         self.dataset_dir_path = dataset_dir_path
         self.datalist_dir_path = datalist_dir_path
 
-        with open(opj(self.datalist_dir_path, "rgbds.json")) as f:
+        with open(os.path.join(self.datalist_dir_path, "rgbds.json")) as f:
             self.rgbd_data_number_list = json.load(f)
-        with open(opj(self.datalist_dir_path, "meshes.json")) as f:
+        with open(os.path.join(self.datalist_dir_path, "meshes.json")) as f:
             self.meshs_data_number_list = json.load(f)
-        # with open(opj(self.datalist_dir_path, 'categories.json')) as f:
+        # with open(os.path.join(self.datalist_dir_path, 'categories.json')) as f:
         #     self.categories_data_number_dict = json.load(f)
 
     def __len__(self):
@@ -115,19 +118,25 @@ class Redwood3DScan:
         self.download(data_number)
 
         # get RGB-D images paths.
-        rgbd_data_dir_path = opj(self.dataset_dir_path, data_number, "rgbd")
+        rgbd_data_dir_path = os.path.join(
+            self.dataset_dir_path, data_number, "rgbd"
+        )
         color_image_paths = sorted(
-            glob.glob(opj(rgbd_data_dir_path, "rgb", "*"))
+            glob.glob(os.path.join(rgbd_data_dir_path, "rgb", "*"))
         )
         depth_image_paths = sorted(
-            glob.glob(opj(rgbd_data_dir_path, "depth", "*"))
+            glob.glob(os.path.join(rgbd_data_dir_path, "depth", "*"))
         )
 
         # get a Mesh data.
         # Note: some samples have the mesh data (therefore, it check self.meshs_data_number_list)
         if data_number in self.meshs_data_number_list:
-            mesh_data_dir_path = opj(self.dataset_dir_path, data_number, "mesh")
-            mesh = Mesh.read(opj(mesh_data_dir_path, f"{data_number}.ply"))
+            mesh_data_dir_path = os.path.join(
+                self.dataset_dir_path, data_number, "mesh"
+            )
+            mesh = Mesh.read(
+                os.path.join(mesh_data_dir_path, f"{data_number}.ply")
+            )
         else:
             mesh = None
 
@@ -144,10 +153,14 @@ class Redwood3DScan:
         data_number: str,
     ) -> None:
         # download RGB-D datasets.
-        rgbd_data_dir_path = opj(self.dataset_dir_path, data_number, "rgbd")
+        rgbd_data_dir_path = os.path.join(
+            self.dataset_dir_path, data_number, "rgbd"
+        )
         if not os.path.exists(rgbd_data_dir_path):
             download_data(
-                url=opj(self.download_domain_url, "rgbd", f"{data_number}.zip"),
+                url=os.path.join(
+                    self.download_domain_url, "rgbd", f"{data_number}.zip"
+                ),
                 output_dir_path=rgbd_data_dir_path,
                 extract_zip=True,
                 remove_zip=True,
@@ -155,13 +168,15 @@ class Redwood3DScan:
 
         # download a mesh ply file.
         # Note: some samples have the mesh data (therefore, it check self.meshs_data_number_list)
-        mesh_data_dir_path = opj(self.dataset_dir_path, data_number, "mesh")
+        mesh_data_dir_path = os.path.join(
+            self.dataset_dir_path, data_number, "mesh"
+        )
         if (not os.path.exists(mesh_data_dir_path)) and (
             data_number in self.meshs_data_number_list
         ):
             if not os.path.exists(mesh_data_dir_path):
                 download_data(
-                    url=opj(
+                    url=os.path.join(
                         self.download_domain_url, "mesh", f"{data_number}.ply"
                     ),
                     output_dir_path=mesh_data_dir_path,
@@ -200,29 +215,36 @@ class RedwoodIndoor:
         self.download(data_name)
 
         # get RGB image paths.
-        rgb_data_dir_path = opj(self.dataset_dir_path, data_name, "rgb")
-        color_image_paths = sorted(glob.glob(opj(rgb_data_dir_path, "*")))
+        rgb_data_dir_path = os.path.join(
+            self.dataset_dir_path, data_name, "rgb"
+        )
+        color_image_paths = sorted(
+            glob.glob(os.path.join(rgb_data_dir_path, "*"))
+        )
 
         # get clean depth image paths.
-        clean_depth_data_dir_path = opj(
+        clean_depth_data_dir_path = os.path.join(
             self.dataset_dir_path, data_name, "clean_depth"
         )
         clean_depth_image_paths = sorted(
-            glob.glob(opj(clean_depth_data_dir_path, "*"))
+            glob.glob(os.path.join(clean_depth_data_dir_path, "*"))
         )
 
         # get noisy depth image paths.
-        noisy_depth_data_dir_path = opj(
+        noisy_depth_data_dir_path = os.path.join(
             self.dataset_dir_path, data_name, "noisy_depth"
         )
         noisy_depth_image_paths = sorted(
-            glob.glob(opj(noisy_depth_data_dir_path, "*"))
+            glob.glob(os.path.join(noisy_depth_data_dir_path, "*"))
         )
 
         # get trajectory txt.
         trajectory_list = []
         with open(
-            opj(self.dataset_dir_path, data_name, f"{data_name}-traj.txt"), "r"
+            os.path.join(
+                self.dataset_dir_path, data_name, f"{data_name}-traj.txt"
+            ),
+            "r",
         ) as f:
             contents = [line.split(" ") for line in f.read().split("\n")]
             for i in range(int(len(contents) / 5)):
@@ -241,7 +263,10 @@ class RedwoodIndoor:
 
         # get a point cloud.
         point_cloud = Points.read(
-            opj(opj(self.dataset_dir_path, data_name), f"{data_name[:-1]}.ply")
+            os.path.join(
+                os.path.join(self.dataset_dir_path, data_name),
+                f"{data_name[:-1]}.ply",
+            )
         )
 
         data = RedwoodIndoorData(
@@ -259,22 +284,26 @@ class RedwoodIndoor:
         data_name: str,
     ) -> None:
         # download a rgb zip.
-        rgb_data_dir_path = opj(self.dataset_dir_path, data_name, "rgb")
+        rgb_data_dir_path = os.path.join(
+            self.dataset_dir_path, data_name, "rgb"
+        )
         if not os.path.exists(rgb_data_dir_path):
             download_data(
-                url=opj(self.download_domain_url, f"{data_name}-color.zip"),
+                url=os.path.join(
+                    self.download_domain_url, f"{data_name}-color.zip"
+                ),
                 output_dir_path=rgb_data_dir_path,
                 extract_zip=True,
                 remove_zip=True,
             )
 
         # download a clean depth zip.
-        clean_depth_data_dir_path = opj(
+        clean_depth_data_dir_path = os.path.join(
             self.dataset_dir_path, data_name, "clean_depth"
         )
         if not os.path.exists(clean_depth_data_dir_path):
             download_data(
-                url=opj(
+                url=os.path.join(
                     self.download_domain_url, f"{data_name}-depth-clean.zip"
                 ),
                 output_dir_path=clean_depth_data_dir_path,
@@ -283,12 +312,12 @@ class RedwoodIndoor:
             )
 
         # download a noisy depth zip.
-        noisy_depth_data_dir_path = opj(
+        noisy_depth_data_dir_path = os.path.join(
             self.dataset_dir_path, data_name, "noisy_depth"
         )
         if not os.path.exists(noisy_depth_data_dir_path):
             download_data(
-                url=opj(
+                url=os.path.join(
                     self.download_domain_url, f"{data_name}-depth-simulated.zip"
                 ),
                 output_dir_path=noisy_depth_data_dir_path,
@@ -297,32 +326,38 @@ class RedwoodIndoor:
             )
 
         # download a oni zip.
-        # oni_data_dir_path = opj(self.dataset_dir_path, data_name, "oni")
+        # oni_data_dir_path = os.path.join(self.dataset_dir_path, data_name, "oni")
         # if not os.path.exists(oni_data_dir_path):
         #     download_data(
-        #         url=opj(self.download_domain_url, f"{data_name}-oni.zip"),
+        #         url=os.path.join(self.download_domain_url, f"{data_name}-oni.zip"),
         #         output_dir_path=oni_data_dir_path,
         #         extract_zip=True,
         #         remove_zip=True,
         #     )
 
         # download a Ground-truth Trajectory txt.
-        trajectory_data_dir_path = opj(self.dataset_dir_path, data_name)
+        trajectory_data_dir_path = os.path.join(
+            self.dataset_dir_path, data_name
+        )
         if not os.path.exists(
-            opj(trajectory_data_dir_path, f"{data_name}-traj.txt")
+            os.path.join(trajectory_data_dir_path, f"{data_name}-traj.txt")
         ):
             download_data(
-                url=opj(self.download_domain_url, f"{data_name}-traj.txt"),
+                url=os.path.join(
+                    self.download_domain_url, f"{data_name}-traj.txt"
+                ),
                 output_dir_path=trajectory_data_dir_path,
             )
 
         # download a dense point cloud zip file.
-        point_data_dir_path = opj(self.dataset_dir_path, data_name)
+        point_data_dir_path = os.path.join(self.dataset_dir_path, data_name)
         if not os.path.exists(
-            opj(point_data_dir_path, f"{data_name[:-1]}.ply")
+            os.path.join(point_data_dir_path, f"{data_name[:-1]}.ply")
         ):
             download_data(
-                url=opj(self.download_domain_url, f"{data_name[:-1]}.ply.zip"),
+                url=os.path.join(
+                    self.download_domain_url, f"{data_name[:-1]}.ply.zip"
+                ),
                 output_dir_path=point_data_dir_path,
                 extract_zip=True,
                 remove_zip=True,
@@ -360,7 +395,7 @@ class ScanNet:
         """
         self.dataset_dir_path = dataset_dir_path
         self.scan_data_path_list = sorted(
-            glob.glob(opj(self.dataset_dir_path, "*"))
+            glob.glob(os.path.join(self.dataset_dir_path, "*"))
         )
 
     def __len__(self):
@@ -371,10 +406,10 @@ class ScanNet:
         scan_data_path = self.scan_data_path_list[idx]
 
         vh_clean_2_mesh = Mesh.read(
-            opj(scan_data_path, "scene0000_00_vh_clean_2.ply")
+            os.path.join(scan_data_path, "scene0000_00_vh_clean_2.ply")
         )
         vh_clean_2_label_mesh = Mesh.read(
-            opj(scan_data_path, "scene0000_00_vh_clean_2.labels.ply")
+            os.path.join(scan_data_path, "scene0000_00_vh_clean_2.labels.ply")
         )
 
         def file_number(path: str):
@@ -382,28 +417,37 @@ class ScanNet:
             return int(file_number)
 
         depth_image_paths = sorted(
-            glob.glob(opj(scan_data_path, "sens", "depth", "*")),
+            glob.glob(os.path.join(scan_data_path, "sens", "depth", "*")),
             key=file_number,
         )
         depth_image_intrinsic_matrix = np.loadtxt(
-            opj(scan_data_path, "sens", "intrinsic", "intrinsic_depth.txt")
+            os.path.join(
+                scan_data_path, "sens", "intrinsic", "intrinsic_depth.txt"
+            )
         )
         depth_image_extrinsic_matrix = np.loadtxt(
-            opj(scan_data_path, "sens", "intrinsic", "extrinsic_depth.txt")
+            os.path.join(
+                scan_data_path, "sens", "intrinsic", "extrinsic_depth.txt"
+            )
         )
         color_image_paths = sorted(
-            glob.glob(opj(scan_data_path, "sens", "color", "*")),
+            glob.glob(os.path.join(scan_data_path, "sens", "color", "*")),
             key=file_number,
         )
         color_image_intrinsic_matrix = np.loadtxt(
-            opj(scan_data_path, "sens", "intrinsic", "intrinsic_color.txt")
+            os.path.join(
+                scan_data_path, "sens", "intrinsic", "intrinsic_color.txt"
+            )
         )
         color_image_extrinsic_matrix = np.loadtxt(
-            opj(scan_data_path, "sens", "intrinsic", "extrinsic_color.txt")
+            os.path.join(
+                scan_data_path, "sens", "intrinsic", "extrinsic_color.txt"
+            )
         )
 
         pose_file_paths = sorted(
-            glob.glob(opj(scan_data_path, "sens", "pose", "*")), key=file_number
+            glob.glob(os.path.join(scan_data_path, "sens", "pose", "*")),
+            key=file_number,
         )
 
         assert len(data.depth_image_paths) == len(
@@ -431,10 +475,10 @@ class SUN3DData:
     """__getitem__ return values of SUN3D class"""
 
     data_path: str
-    color_image_paths: list
-    depth_image_paths: list
-    annotation_file_paths: list
-    extrinsics_file_paths: list
+    color_image_paths: List[str]
+    depth_image_paths: List[str]
+    annotation_file_paths: List[str]
+    extrinsics_file_paths: List[str]
     intrinsics_matrix: np.ndarray
 
 
@@ -460,21 +504,33 @@ class SUN3D:
 
         # get RGB-D images.
         color_image_paths = sorted(
-            glob.glob(opj(self.dataset_dir_path, data_path, "image", "*"))
+            glob.glob(
+                os.path.join(self.dataset_dir_path, data_path, "image", "*")
+            )
         )
         depth_image_paths = sorted(
-            glob.glob(opj(self.dataset_dir_path, data_path, "depth", "*"))
+            glob.glob(
+                os.path.join(self.dataset_dir_path, data_path, "depth", "*")
+            )
         )
 
         # get other data.
         annotation_file_paths = sorted(
-            glob.glob(opj(self.dataset_dir_path, data_path, "annotation", "*"))
+            glob.glob(
+                os.path.join(
+                    self.dataset_dir_path, data_path, "annotation", "*"
+                )
+            )
         )
         extrinsics_file_paths = sorted(
-            glob.glob(opj(self.dataset_dir_path, data_path, "extrinsics", "*"))
+            glob.glob(
+                os.path.join(
+                    self.dataset_dir_path, data_path, "extrinsics", "*"
+                )
+            )
         )
         intrinsics_matrix = np.loadtxt(
-            opj(self.dataset_dir_path, data_path, "intrinsics.txt")
+            os.path.join(self.dataset_dir_path, data_path, "intrinsics.txt")
         )
 
         data = SUN3DData(
@@ -495,22 +551,26 @@ class SUN3D:
             "extrinsics": ".txt",
             "image": ".jpg",
         }
-        remote_scene_dir_url = opj(self.download_domain_url, scene_dir_name)
-        local_scene_dir_path = opj(self.dataset_dir_path, scene_dir_name)
+        remote_scene_dir_url = os.path.join(
+            self.download_domain_url, scene_dir_name
+        )
+        local_scene_dir_path = os.path.join(
+            self.dataset_dir_path, scene_dir_name
+        )
         for key in scene_data_dir_dict:
             ext = scene_data_dir_dict[key]
-            remote_scene_data_dir_url = opj(remote_scene_dir_url, key)
-            loacl_scene_data_dir_path = opj(local_scene_dir_path, key)
+            remote_scene_data_dir_url = os.path.join(remote_scene_dir_url, key)
+            loacl_scene_data_dir_path = os.path.join(local_scene_dir_path, key)
             response: Response = requests.get(remote_scene_data_dir_url)
             response.encoding = response.apparent_encoding
             filename_list = re.findall(
                 f"(?<=href\=[\"'])[^\"']*{ext}[^\"']*(?=[\"'])", response.text
             )
             for filename in filename_list:
-                local_scene_data_file_path = opj(
+                local_scene_data_file_path = os.path.join(
                     loacl_scene_data_dir_path, filename
                 )
-                remote_scene_data_file_url = opj(
+                remote_scene_data_file_url = os.path.join(
                     remote_scene_data_dir_url, filename
                 )
                 if not os.path.exists(local_scene_data_file_path):
@@ -518,35 +578,104 @@ class SUN3D:
                         remote_scene_data_file_url, loacl_scene_data_dir_path
                     )
 
-        intrinsics_file_path = opj(local_scene_dir_path, "intrinsics.txt")
-        intrinsics_url = opj(remote_scene_dir_url, "intrinsics.txt")
+        intrinsics_file_path = os.path.join(
+            local_scene_dir_path, "intrinsics.txt"
+        )
+        intrinsics_url = os.path.join(remote_scene_dir_url, "intrinsics.txt")
         if not os.path.exists(intrinsics_file_path):
             download_data(intrinsics_url, local_scene_dir_path)
 
 
-# @dataclass
-# class KITTIData:
-#     """__getitem__ return values of KITTI class"""
+class A2D2WithBBox:
+    def __init__(self, dataset_dir_path: str) -> None:
+        self.dataset_dir_path = dataset_dir_path
 
-#     point_cloud_coords: np.ndarray
+        self.datetime_dir_paths = sorted(
+            glob.glob(
+                os.path.join(
+                    self.dataset_dir_path, "camera_lidar_semantic_bboxes", "*"
+                )
+            )
+        )
 
+    def __len__(self):
+        return len(self.date_and_time_dir_paths)
 
-# class KITTI:
-#     def __init__(self, dataset_path: str) -> None:
-#         self.dataset_path = dataset_path
+    def __getitem__(self, idx: int) -> List[List[str]]:
+        """ """
 
-#         self.velodyne_file_paths = sorted(
-#             glob.glob(opj(self.dataset_path, "velodyne", "*"))
-#         )
+        datetime_dir_path = self.datetime_dir_paths[idx]
+        datetime_dir_name = os.path.basename(datetime_dir_path.rstrip("/"))
 
-#     def __len__(self):
-#         return len(self.velodyne_file_paths)
+        # Find identification names (ex: 000000091) from png files in
+        # camera/cam_front_center
+        #  (ex: 20180807145028_camera_frontcenter_000000091.png)
+        front_center_camera_image_paths = glob.glob(
+            os.path.join(
+                datetime_dir_path, "camera", "cam_front_center", "*.png"
+            )
+        )
+        identification_names = sorted(
+            [
+                os.path.splitext(f.split("_")[-1])[0]
+                for f in front_center_camera_image_paths
+            ]
+        )
 
-#     def __getitem__(self, idx: int) -> ScanNetData:
-#         data = KITTIData()
+        datetime_name = "".join(datetime_dir_name.split("_"))
+        data = []
+        for identification_name in identification_names:
+            # Get file paths of front center camera data and label
+            front_center_camera_image_path = os.path.join(
+                datetime_dir_path,
+                "camera",
+                "cam_front_center",
+                "{}_camera_frontcenter_{}.png".format(
+                    datetime_name, identification_name
+                ),
+            )
+            front_center_camera_info_path = os.path.join(
+                datetime_dir_path,
+                "camera",
+                "cam_front_center",
+                "{}_camera_frontcenter_{}.json".format(
+                    datetime_name, identification_name
+                ),
+            )
+            front_center_camera_label_path = os.path.join(
+                datetime_dir_path,
+                "label",
+                "cam_front_center",
+                "{}_label_frontcenter_{}.json".format(
+                    datetime_name, identification_name
+                ),
+            )
 
-#         data.point_cloud_coords = np.fromfile(
-#             self.velodyne_file_paths[idx], dtype=np.float32
-#         ).reshape(-1, 4)
+            # Get file paths of front center lidar data and label
+            front_center_lidar_pc_path = os.path.join(
+                datetime_dir_path,
+                "lidar",
+                "cam_front_center",
+                "{}_lidar_frontcenter_{}.npz".format(
+                    datetime_name, identification_name
+                ),
+            )
+            front_center_lidar_label3d_path = os.path.join(
+                datetime_dir_path,
+                "label3D",
+                "cam_front_center",
+                "{}_label3D_frontcenter_{}.json".format(
+                    datetime_name, identification_name
+                ),
+            )
 
-#         return data
+            paths = [
+                front_center_camera_image_path,
+                front_center_camera_info_path,
+                front_center_camera_label_path,
+                front_center_lidar_pc_path,
+                front_center_lidar_label3d_path,
+            ]
+            data.append(paths)
+
+        return data

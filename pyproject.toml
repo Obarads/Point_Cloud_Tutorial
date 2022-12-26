@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "pct"
+version = "0.1.0"
+description = ""
+authors = ["obarads <id115561@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.21.2"
+scipy = "^1.9.1"
+notebook = "^6.4.12"
+jupyterlab = "^3.4.7"
+k3d = "^2.14.5"
+plyfile = "^0.7.4"
+open3d = "0.16.0"
+torch = {extras = ["gpu"], url = "https://download.pytorch.org/whl/cu113/torch-1.12.1%2Bcu113-cp310-cp310-linux_x86_64.whl", optional = true}
+h5py = "^3.7.0"
+opencv-python = "^4.6.0.66"
+pandas = "^1.5.2"
+
+[tool.poetry.extras]
+gpu = ["torch"]
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.6.0"
+pytest = "^6.2.5"
+pytest-cov = "^3.0.0"
+flake8 = "^3.9.2"
+pre-commit = "^2.15.0"
+ipython = "^8.4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

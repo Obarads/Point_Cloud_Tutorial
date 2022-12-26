@@ -2,6 +2,8 @@
 .vscode
 .ipynb_checkpoints
 __pycache__
+.venv
+build
 
 # python
 check.ipynb
@@ -12,6 +14,9 @@ kitti.ipynb
 
 # git clone dir
 /python/datasets/redwood-3dscan/
+
+# cmake
+cmake-3.25.1/
 
 # data file
 *.pcd
@@ -25,3 +30,4 @@ outputs/
 /data/sun3d
 /data/modelnet40_ply_hdf5_2048
 /data/3dshapenetscode
+/data/A2D2

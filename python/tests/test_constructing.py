@@ -17,3 +17,4 @@ def test_point_to_voxel(data_dir_path: str):
     coords, _, _ = Points.read(opj(data_dir_path, "bunny_pc.ply"))
     _ = point_to_voxel(coords, 0.05)
     assert True
+

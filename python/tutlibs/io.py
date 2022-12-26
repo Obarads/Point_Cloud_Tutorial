@@ -163,6 +163,7 @@ class Points:
         colors: np.ndarray = None,
         color_range: list = [0, 255],
         additional_data: Dict[str, np.ndarray] = None,
+        text: bool = False,
     ):
         """
         Write a point cloud into a ply file.
@@ -173,6 +174,7 @@ class Points:
             rgb: colors (N, 3)
             color_range: minimal and maximum color value
             additional_data: other data
+            text: selection to save ply as text
         """
 
         # Point cloud data and properties for writing
@@ -202,7 +204,7 @@ class Points:
         for i, p in enumerate(prop):
             ply_data[p[0]] = points[i]
 
-        ply = PlyData([PlyElement.describe(ply_data, "vertex")], text=True)
+        ply = PlyData([PlyElement.describe(ply_data, "vertex")], text=text)
         ply.write(filename)
 
 

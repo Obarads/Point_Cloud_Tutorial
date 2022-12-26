@@ -1,4 +1,5 @@
-import path
+from path import add_dir_path
+add_dir_path()
 
 import argparse
 from tqdm import tqdm

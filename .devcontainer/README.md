@@ -11,7 +11,7 @@ You can create a GPU enviroment with devcontainer.json (via VSCode) or docker co
     docker build . -t pct-cpu -f Dockerfile.cpu
     docker run -dit -p 8888:8888 --name pct_cpu pct-cpu
     docker exec pct_cpu git clone https://github.com/Obarads/Point_Cloud_Tutorial.git /workspace/Point_Cloud_Tutorial
-    docker exec pct_cpu sh /workspaces/Point_Cloud_Tutorial/.devcontainer/python_packages.sh cpu
+    docker exec pct_cpu /bin/bash /workspaces/Point_Cloud_Tutorial/.devcontainer/poetry.sh 
     ```
 
 ### GPU
@@ -23,10 +23,8 @@ You can create a GPU enviroment with docker commands.
     docker build . -t pct-gpu -f Dockerfile.gpu
     docker run -dit -p 8888:8888 --gpus all --name pct_gpu pct-gpu
     docker exec pct_gpu git clone https://github.com/Obarads/Point_Cloud_Tutorial.git /workspace/Point_Cloud_Tutorial
-    docker exec pct_gpu sh /workspace/Point_Cloud_Tutorial/.devcontainer/python_packages.sh gpu
-
-    # Optional settings for Codespaces bash prompt theme
-    docker exec pct_gpu sh /workspace/Point_Cloud_Tutorial/.devcontainer/optional_setting.sh
+    docker exec pct_cpu /bin/bash /workspaces/Point_Cloud_Tutorial/.devcontainer/poetry.sh "-E gpu"
+    docker exec pct_cpu /bin/bash /workspaces/Point_Cloud_Tutorial/.devcontainer/ninja.sh
     ```
 
 ## About tutorial directory and files
