@@ -1,5 +1,5 @@
-#ifndef _TRANSFORMATION_HPP
-#define _TRANSFORMATION_HPP
+#ifndef TRANSFORMATION_HPP
+#define TRANSFORMATION_HPP
 
 #include <Eigen/Dense>
 #include <Eigen/Jacobi>
@@ -11,9 +11,11 @@
  * @param[in] angle radian (0 ~ 2pi)
  * @return Rotated point cloud
  */
-Eigen::MatrixXf rotation(Eigen::MatrixXf coords, const char *axis, float angle)
+template <typename mat_t>
+mat_t rotation(mat_t coords, const char *axis, float angle)
 {
-    Eigen::Matrix4f rotation_matrix = Eigen::Matrix4f::Identity();
+    mat_t rotation_matrix(4, 4);
+    rotation_matrix = mat_t::Identity(4, 4);
     if (axis == "x")
     {
         rotation_matrix(1, 1) = std::cos(angle);
@@ -41,7 +43,7 @@ Eigen::MatrixXf rotation(Eigen::MatrixXf coords, const char *axis, float angle)
         exit(1);
     }
 
-    Eigen::MatrixXf transformed_coords = (rotation_matrix * coords.transpose()).transpose();
+    mat_t transformed_coords = (rotation_matrix * coords.transpose()).transpose();
 
     return transformed_coords;
 }
@@ -52,9 +54,10 @@ Eigen::MatrixXf rotation(Eigen::MatrixXf coords, const char *axis, float angle)
  * @param[in] translation_vector [4]
  * @return Translated point cloud
  */
-Eigen::MatrixXf translation(Eigen::MatrixXf coords, Eigen::Vector4f translation_vector)
+template <typename mat_t, typename vec_t>
+mat_t translation(mat_t coords, vec_t translation_vector)
 {
-    Eigen::MatrixXf transformed_coords = coords.rowwise() + translation_vector.transpose();
+    mat_t transformed_coords = coords.rowwise() + translation_vector.transpose();
     return transformed_coords;
 }
 

@@ -1,8 +1,9 @@
 #include <pcl/io/ply_io.h>
 #include <math.h>
 
+#include "include/io.hpp"
 #include "include/icp.hpp"
-
+#include "include/transformation.hpp"
 
 int main(int argc, char **argv)
 {
@@ -25,15 +26,18 @@ int main(int argc, char **argv)
         return (-1);
     }
 
-    // Load source and target data (shape: [N, 4])
+    // Load source and target data [N, 4]
     Eigen::MatrixXf source = source_pcl_cloud->getMatrixXfMap().transpose();
     Eigen::MatrixXf target = target_pcl_cloud->getMatrixXfMap().transpose();
-    Eigen::Vector4f translation_vector; translation_vector << 0.0, 0.1, 0.0, 0.0;
-    source = rotation(
-        translation(source, translation_vector),
+
+    Eigen::Vector4f translation_vector;
+    translation_vector << 0.0, 0.1, 0.0, 0.0;
+    source = rotation<Eigen::MatrixXf>(
+        translation<Eigen::MatrixXf, Eigen::Vector4f>(source, translation_vector),
         "z",
         30.0 / 180.0 * M_PI
     );
+    // source = translation<Eigen::MatrixXf, Eigen::Vector4f>(source, translation_vector);
 
     const int num_source_points = source.rows();
     Eigen::MatrixXf transformed_source;
@@ -41,18 +45,17 @@ int main(int argc, char **argv)
     Eigen::Matrix4f transformation_matrix = Eigen::Matrix4f::Identity();
     Eigen::Matrix4f new_transformation_matrix = Eigen::Matrix4f::Identity();
     Eigen::MatrixXi correspondence_indices;
-    // Eigen::MatrixXf distances(num_source_points, 1);
 
-    PointCloud<float> target_pc;
-    eigen_to_pointcloud(target_pc, target);
-    kdtree *index = new kdtree(3 /*dim*/, target_pc, {10 /* max leaf */});
+    Eigen::MatrixXf target_for_kdtree = target(Eigen::placeholders::all, Eigen::seqN(0, 3));
+    kdtree *index = new kdtree(3, std::cref(target_for_kdtree), 20);
 
-    int iteration = 10;
+    int iteration = 100;
     float threshold = 0.001;
     for (int i = 0; i < iteration; i++)
     {
         transformed_source = (transformation_matrix * source.transpose()).transpose();
-        correspondence_indices = brute_force_matching(index, transformed_source);
+
+        correspondence_indices = brute_force_matching<Eigen::MatrixXf, float>(index, transformed_source);
         new_transformation_matrix = estimate_transformation(transformed_source, target, correspondence_indices);
 
         new_transformed_source = (new_transformation_matrix * transformed_source.transpose()).transpose();

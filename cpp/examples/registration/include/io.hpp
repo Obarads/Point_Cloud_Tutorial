@@ -1,5 +1,5 @@
-#ifndef _IO_HPP
-#define _IO_HPP
+#ifndef IO_HPP
+#define IO_HPP
 
 #include <iostream>
 #include <fstream>
