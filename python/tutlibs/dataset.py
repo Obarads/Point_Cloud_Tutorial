@@ -490,8 +490,17 @@ class SUN3D:
         self.dataset_dir_path = dataset_dir_path
         self.datalist_path = datalist_path
 
+        if not os.path.exists(self.datalist_path):
+            self.download_datalist(self.datalist_path)
+
+        if not os.path.exists(self.dataset_dir_path):
+            os.makedirs(self.dataset_dir_path, exist_ok=True)
+
         with open(self.datalist_path) as f:
             self.datalist = f.read().split("\n")
+
+    def download_datalist(self, local_datalist_path: str) -> None:
+        download_data(self.path_list_url, local_datalist_path)
 
     def __len__(self):
         return len(self.datalist)

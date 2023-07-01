@@ -6,6 +6,8 @@
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
-    m.def("k_nearest_neighbors", &k_nearest_neighbors_forward,
-          "K nearest neighbors forward (CUDA)");
+      m.def("k_nearest_neighbors_forward", &k_nearest_neighbors_forward,
+            "K nearest neighbors forward (CUDA)");
+      m.def("k_nearest_neighbors_backward", &k_nearest_neighbors_backward,
+            "K nearest neighbors backward (CUDA)");
 }

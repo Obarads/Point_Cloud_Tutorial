@@ -7,4 +7,8 @@
 std::vector<at::Tensor> k_nearest_neighbors_forward(at::Tensor points_coords,
                                                     at::Tensor centers_coords,
                                                     int k);
+std::vector<at::Tensor> k_nearest_neighbors_backward(at::Tensor grad_dists,
+                                                     at::Tensor indices,
+                                                     at::Tensor centers_coords,
+                                                     at::Tensor coords);
 #endif

@@ -1,6 +1,12 @@
 import time
 import numpy as np
+import random
+import os
 
+def env_seed(seed):
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
 
 def single_color(color, num_points: int):
     """

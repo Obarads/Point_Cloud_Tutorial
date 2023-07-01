@@ -12,7 +12,8 @@ from torch import nn
 
 from tutlibs.torchlibs.models.VoxNet import VoxNetClassification
 from tutlibs.torchlibs.dataset import ModelNet10DatasetForVoxNet
-
+from tutlibs.torchlibs.utils import torch_seed
+from tutlibs.utils import env_seed
 
 def test(
     device: int,
@@ -149,7 +150,15 @@ if __name__ == "__main__":
         type=str,
         default="../../data/modelnet40_ply_hdf5_2048/",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+    )
     args = parser.parse_args()
+
+    torch_seed(args.seed)
+    env_seed(args.seed)
 
     if args.mode == "train":
         train(args.device, args.output_dir_path, args.dataset_dir_path)

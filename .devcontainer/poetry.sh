@@ -3,7 +3,7 @@ HOME_PATH="/home/user/"
 # Install poetry
 curl -sSL https://install.python-poetry.org | python3.10 -
 POETRY_BIN_DIR_PATH=${HOME_PATH}.local/bin
-POETRY_ACTIVATION='export PATH="${POETRY_BIN_DIR_PATH}:$PATH"'
+POETRY_ACTIVATION="export PATH=$(echo $POETRY_BIN_DIR_PATH):\$PATH"
 echo $POETRY_ACTIVATION >> ${HOME_PATH}/.bashrc
 ${POETRY_BIN_DIR_PATH}/poetry config virtualenvs.in-project true
 
