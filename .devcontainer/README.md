@@ -20,8 +20,8 @@ You can create a GPU enviroment with docker commands.
     ```bash
     # build an enviroment
     wget https://raw.githubusercontent.com/Obarads/Point_Cloud_Tutorial/main/.devcontainer/Dockerfile.gpu
-    docker build . -t pct-gpu -f Dockerfile.gpu
-    docker run -dit -p 8888:8888 --gpus all --name pct_gpu pct-gpu
+    docker build . -t pct-gpu -f Dockerfile.gpu --build-arg UID=$(id -u) --build-arg GID=$(id -g)
+    docker run -dit -p 8888:8888 --gpus all --name pct_gpu pct-gpu 
     docker exec pct_gpu git clone https://github.com/Obarads/Point_Cloud_Tutorial.git /workspace/Point_Cloud_Tutorial
     docker exec pct_cpu /bin/bash /workspaces/Point_Cloud_Tutorial/.devcontainer/poetry.sh "-E gpu"
     docker exec pct_cpu /bin/bash /workspaces/Point_Cloud_Tutorial/.devcontainer/ninja.sh

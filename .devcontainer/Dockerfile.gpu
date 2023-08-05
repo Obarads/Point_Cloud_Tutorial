@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.3.0-cudnn8-devel-ubuntu18.04
+FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 
 # set timezone
 RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
@@ -22,10 +22,7 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-RUN add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get install -y --no-install-recommends \
-    python3.10 python3.10-dev && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 
 
 # [Optional] User setting
@@ -38,7 +35,3 @@ RUN groupadd -g ${GID} host-group && \
     chmod 777 -R /workspace
 USER ${UID}
 ENV SHELL /bin/bash
-
-# [Optional] bash UI
-COPY ./bash_setting.sh ./
-RUN sh bash_setting.sh && rm bash_setting.sh
