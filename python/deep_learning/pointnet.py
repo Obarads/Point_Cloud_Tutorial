@@ -1,4 +1,5 @@
 from path import add_dir_path
+
 add_dir_path()
 
 import argparse
@@ -12,12 +13,14 @@ from torch import optim
 from torch import nn
 
 from tutlibs.torchlibs.models.PointNet import PointNetClassification
-from tutlibs.torchlibs.dataset import (
-    ModelNet40DatasetForPointNet,
+from tutlibs.torchlibs.dataset.modelnet import ModelNet40DatasetForPointNet
+from tutlibs.torchlibs.dataset.augmentation import (
     rotate_point_cloud,
     jitter_point_cloud,
 )
 from tutlibs.torchlibs.loss import feature_transform_regularizer
+from tutlibs.utils import env_seed
+from tutlibs.torchlibs.utils import torch_seed
 
 
 def collate_fn(batch):
@@ -172,14 +175,22 @@ if __name__ == "__main__":
         "--test_model_file_path",
         type=str,
         default="outputs/pointnet/model.pth",
-        help="trained param file (model.pth) path, only mode=test"
+        help="trained param file (model.pth) path, only mode=test",
     )
     parser.add_argument(
         "--dataset_dir_path",
         type=str,
         default="../../data/modelnet40_ply_hdf5_2048/",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+    )
     args = parser.parse_args()
+
+    torch_seed(args.seed)
+    env_seed(args.seed)
 
     if args.mode == "train":
         train(args.device, args.output_dir_path, args.dataset_dir_path)
@@ -187,4 +198,3 @@ if __name__ == "__main__":
         test(args.device, args.dataset_dir_path, args.test_model_file_path)
     else:
         raise ValueError()
-

@@ -19,7 +19,9 @@ def farthest_point_sampling(coords: torch.Tensor, num_samples: int):
     min_square_dists = torch.full(
         (B, N), 2**16 - 1, dtype=torch.float32, device=device
     )
-    sample_indices = torch.zeros((B, num_samples), dtype=torch.long)
+    sample_indices = torch.zeros(
+        (B, num_samples), dtype=torch.long, device=device
+    )
 
     # Get first index
     sample_indices[:, 0] = 0

@@ -4,27 +4,18 @@
 #include <ATen/ATen.h>
 #include <ATen/cuda/CUDAContext.h>
 #include <cmath>
+#include <vector>
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include <vector>
+#define MAXIMUM_THREADS_IN_BLOCK 1024
 
-#define MAXIMUM_THREADS 512
-
-inline int optimal_num_threads(int work_size)
+inline int optimal_num_threads(int num_processing,
+                               int maximum_threads_in_block = MAXIMUM_THREADS_IN_BLOCK)
 {
-    const int pow_2 = std::log2(static_cast<double>(work_size));
-    return max(min(1 << pow_2, MAXIMUM_THREADS), 1);
-}
-
-inline dim3 optimal_block_config(int x, int y)
-{
-    const int x_threads = optimal_num_threads(x);
-    const int y_threads =
-        max(min(optimal_num_threads(y), MAXIMUM_THREADS / x_threads), 1);
-    dim3 block_config(x_threads, y_threads, 1);
-    return block_config;
+    const int pow_2 = std::log2(static_cast<double>(num_processing));
+    return max(min(1 << pow_2, maximum_threads_in_block), 1);
 }
 
 #define CUDA_CHECK_ERRORS()                                                 \

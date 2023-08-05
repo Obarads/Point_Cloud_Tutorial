@@ -2,8 +2,8 @@ import os
 
 from torch.utils.cpp_extension import load
 
-_cpp_src_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "../../../cu_cpp"
+_cpp_src_path = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../../cu_cpp")
 )
 _backend = load(
     name="_backend",
