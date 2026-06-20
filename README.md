@@ -24,17 +24,17 @@ Tutorial contents are as follows:
 | Basic code                           | [python](python/basic_code.ipynb)             | We introduce basic code used in this tutorial.                |                            |                 |
 | Characteristic                       | [python](python/characteristic.ipynb)         | characteristic of the point cloud                             |                            |                 |
 | Nearest neighbors search             | [python](python/nns.ipynb)                    | kNN, Radius Search, Hybrid Search                             | [python, C++](docs/nns.md) |                 |
-| Tree structure                       | [python](python/tree_structure.ipynb)         | None                                                          |                            |                 |
+| Tree structure                       | [python](python/tree_structure.ipynb)         | Octree, kNN and radius search with a tree                     |                            |                 |
 | Downsampling                         | [python](python/downsampling.ipynb)           | Random Sampling, Furthest point sampling, Voxel grid sampling |                            |                 |
 | Normal estimation                    | [python](python/normal_estimation.ipynb)      | Estimation with PCA, Normal re-orientation methods            |                            |                 |
 | Handcrafted feature                  | [python](python/handcrafted_feature.ipynb)    | FPH, PPF                                                      |                            |                 |
 | Visualization                        | [python](python/visualization.ipynb)          | Visualization functions in the repository                     |                            |                 |
-| Competition                          | [python](python/competition.ipynb)            | None                                                          |                            | add description |
+| Competition                          | [python](python/competition.ipynb)            | Point cloud related competitions                              |                            |                 |
 | Transformation/Affine transformation | [python](python/affine_transformations.ipynb) | Affine transformation, Transformation matrix                  |                            |                 |
 | Transformation/Camera projection     | [python](python/camera_projection.ipynb)      | Camera projection                                             |                            |                 |
 | Task/Reconstruction                  | [python](python/reconstruction.ipynb)         | Marching cube, meshes to points                               |                            | add description |
 | Task/Registration                    | [python](python/registration.ipynb)           | ICP, RANSAC with Handcrafted features                         |                            | add description |
-| Task/SLAM                            | [python](ptyhon/slam.ipynb)                   | None                                                          | [python](docs/slam.md)     |                 |
+| Task/SLAM                            | [python](python/slam.ipynb)                   | Frame-to-frame registration (odometry), mapping              | [python](docs/slam.md)     |                 |
 
 **Deep Learning**
 | Theme      | Page & code                                    | Paper name                                                                                                                                                | Other packages list | Todo                   |
