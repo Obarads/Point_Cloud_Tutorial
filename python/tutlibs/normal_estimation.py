@@ -1,33 +1,43 @@
 import numpy as np
 from scipy.sparse.csgraph import minimum_spanning_tree
-from .nns import k_nearest_neighbors
+from .nns import k_nearest_neighbors, radius_and_k_nearest_neighbors
 from .operator import gather, square_distance, dot
+
 
 # Note:
 # (1) code is same code below:
 # normals = np.zeros((len(v), 3), dtype=np.float32) # (N, 3)
 # for i, idx in enumerate(w_min_idxs):
 #     normals[i] = v[i, :, idx]
-def normal_estimation(coords: np.ndarray, k: int = 10) -> np.ndarray:
-    """Estimate normals each point with eigenvector of covariance matrix.
-    This function use k nearest neighbor (kNN) to get covariance matrixs.
+def _normals_from_neighbors(
+    coords: np.ndarray, idxs: np.ndarray, valid_mask: np.ndarray
+) -> np.ndarray:
+    """Estimate normals from neighbor indices via PCA.
 
     Args:
-        coords: coordinates of points, (N, 3)
-        k: number of neighbor for kNN
+        coords: coordinates of points used to gather neighbors, (M, 3)
+        idxs: neighbor indices for each point, (N, K)
+        valid_mask: True where a neighbor is valid, (N, K). Invalid neighbors
+            (e.g. fewer than K neighbors within a radius) are ignored.
 
-    Returns
+    Returns:
         normals: estimated normals (N, 3)
     """
-    # Get neighbor points. (TODO: add radius)
-    idxs, _ = k_nearest_neighbors(coords, coords, k)
-    knn_points = gather(coords, idxs)
+    neighbor_points = gather(coords, idxs)  # (N, K, 3)
 
-    # Get covariance matrix of each point.
-    knn_mean_points = np.mean(knn_points, axis=-2, keepdims=True)
-    deviation = knn_points - knn_mean_points
+    # weights ignore invalid neighbors (count varies per point for radius NNS).
+    weights = valid_mask[..., np.newaxis].astype(neighbor_points.dtype)  # (N, K, 1)
+    num_neighbors = np.maximum(
+        np.sum(weights, axis=1, keepdims=True), 1
+    )  # (N, 1, 1)
+
+    # Get covariance matrix of each point (only with valid neighbors).
+    mean_points = np.sum(neighbor_points * weights, axis=1, keepdims=True) / num_neighbors
+    deviation = (neighbor_points - mean_points) * weights
     deviation_t = deviation.transpose(0, 2, 1)
-    covariance_matrixs = np.matmul(deviation_t, deviation) / k  # (N, 3, 3)
+    covariance_matrixs = np.matmul(deviation_t, deviation) / num_neighbors.reshape(
+        -1, 1, 1
+    )  # (N, 3, 3)
 
     # Get eigenvector and eigenvalue for each point
     w, v = np.linalg.eig(covariance_matrixs.transpose(0, 2, 1))
@@ -40,39 +50,59 @@ def normal_estimation(coords: np.ndarray, k: int = 10) -> np.ndarray:
     return normals
 
 
-def normal_estimation_v2(
-    coords1: np.ndarray, coords2: np.ndarray, k: int = 10
+def normal_estimation(
+    coords: np.ndarray, k: int = 10, r: float = None
 ) -> np.ndarray:
     """Estimate normals each point with eigenvector of covariance matrix.
-    This function use k nearest neighbor (kNN) to get covariance matrixs.
+    This function uses nearest neighbor search to get covariance matrixs.
 
     Args:
-        coords1: coordinates of points, (N, 3)
-        coords2: coordinates of points, (M, 3)
-        k: number of neighbor for kNN
+        coords: coordinates of points, (N, 3)
+        k: number of neighbor for nearest neighbor search
+        r: radius for neighbor search. If None, use kNN. Otherwise, use up to
+            k neighbors within the radius (radius and k nearest neighbors).
 
     Returns
         normals: estimated normals (N, 3)
     """
-    # Get neighbor points. (TODO: add radius)
-    idxs, _ = k_nearest_neighbors(coords1, coords2, k)
-    knn_points = gather(coords1, idxs)
+    # Get neighbor points.
+    if r is None:
+        idxs, _ = k_nearest_neighbors(coords, coords, k)
+        valid_mask = np.ones_like(idxs, dtype=bool)
+    else:
+        idxs, _ = radius_and_k_nearest_neighbors(coords, coords, r, k)
+        valid_mask = idxs != len(coords)  # invalid idx is set to len(coords).
+        idxs = np.where(valid_mask, idxs, 0)  # make gather of invalid idx safe.
 
-    # Get covariance matrix of each point.
-    knn_mean_points = np.mean(knn_points, axis=-2, keepdims=True)
-    deviation = knn_points - knn_mean_points
-    deviation_t = deviation.transpose(0, 2, 1)
-    covariance_matrixs = np.matmul(deviation_t, deviation) / k  # (N, 3, 3)
+    return _normals_from_neighbors(coords, idxs, valid_mask)
 
-    # Get eigenvector and eigenvalue of each point
-    w, v = np.linalg.eig(covariance_matrixs.transpose(0, 2, 1))
-    w_min_idxs = np.argmin(w, axis=1)
 
-    # Get normal of each point (1)
-    normals = np.take_along_axis(v, w_min_idxs[:, np.newaxis, np.newaxis], axis=2)
-    normals = normals.squeeze(2)  # (N, normal_vector, 1) -> (N, normal_vector)
+def normal_estimation_v2(
+    coords1: np.ndarray, coords2: np.ndarray, k: int = 10, r: float = None
+) -> np.ndarray:
+    """Estimate normals each point with eigenvector of covariance matrix.
+    This function uses nearest neighbor search to get covariance matrixs.
 
-    return normals
+    Args:
+        coords1: coordinates of points, (N, 3)
+        coords2: coordinates of points, (M, 3)
+        k: number of neighbor for nearest neighbor search
+        r: radius for neighbor search. If None, use kNN. Otherwise, use up to
+            k neighbors within the radius (radius and k nearest neighbors).
+
+    Returns
+        normals: estimated normals (N, 3)
+    """
+    # Get neighbor points.
+    if r is None:
+        idxs, _ = k_nearest_neighbors(coords1, coords2, k)
+        valid_mask = np.ones_like(idxs, dtype=bool)
+    else:
+        idxs, _ = radius_and_k_nearest_neighbors(coords1, coords2, r, k)
+        valid_mask = idxs != len(coords2)  # invalid idx is set to len(coords2).
+        idxs = np.where(valid_mask, idxs, 0)  # make gather of invalid idx safe.
+
+    return _normals_from_neighbors(coords1, idxs, valid_mask)
 
 
 def normal_orientation(coords: np.ndarray, normals: np.ndarray):

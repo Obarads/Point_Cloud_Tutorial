@@ -251,6 +251,118 @@ class Octree:
         return np.array(min_corners), np.array(max_corners)
 
 
+class KDTreeNode:
+    """A node of a kd-tree.
+
+    Attributes:
+        index: index of the point stored at this node
+        axis: splitting axis (0: x, 1: y, 2: z)
+        left: child node for points on the smaller side of the axis (or None)
+        right: child node for points on the larger side of the axis (or None)
+    """
+
+    def __init__(
+        self, index: int, axis: int, left: "KDTreeNode", right: "KDTreeNode"
+    ) -> None:
+        self.index = index
+        self.axis = axis
+        self.left = left
+        self.right = right
+
+
+class KDTree:
+    """kd-tree for a 3D point cloud.
+
+    A kd-tree recursively splits the points by an axis-aligned plane. At each
+    depth the splitting axis cycles through x, y and z, and the median point
+    along that axis becomes the node. Because each node knows the splitting
+    plane, kNN search can skip (prune) the half-space that cannot contain a
+    closer neighbor.
+    """
+
+    def __init__(self, coords: np.ndarray) -> None:
+        """Build a kd-tree from a point cloud.
+
+        Args:
+            coords: coordinates of points, (N, C)
+        """
+        self.coords = np.asarray(coords, dtype=np.float64)
+        self.root = self._build(np.arange(len(self.coords)), depth=0)
+
+    def _build(self, indices: np.ndarray, depth: int) -> KDTreeNode:
+        """Recursively build kd-tree nodes."""
+        if len(indices) == 0:
+            return None
+
+        # cycle the splitting axis through x, y, z by depth.
+        axis = depth % self.coords.shape[1]
+
+        # sort points by the splitting axis and pick the median as the node.
+        order = indices[np.argsort(self.coords[indices, axis])]
+        mid = len(order) // 2
+
+        return KDTreeNode(
+            index=int(order[mid]),
+            axis=axis,
+            left=self._build(order[:mid], depth + 1),
+            right=self._build(order[mid + 1 :], depth + 1),
+        )
+
+    def knn_search(
+        self, query: np.ndarray, k: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Find k nearest neighbors of a query.
+
+        Args:
+            query: a query coordinate, (C,)
+            k: number of nearest neighbors
+
+        Returns:
+            idxs: indices of k nearest neighbors sorted by distance
+            dists: distance to each neighbor
+        """
+        query = np.asarray(query, dtype=np.float64)
+        # max-heap of (-distance, index) so heap[0] keeps the farthest neighbor.
+        heap: List[Tuple[float, int]] = []
+        self._knn_search(self.root, query, k, heap)
+        results = sorted(((-d, i) for d, i in heap), key=lambda x: x[0])
+        idxs = np.array([i for _, i in results], dtype=np.int64)
+        dists = np.array([d for d, _ in results], dtype=np.float64)
+        return idxs, dists
+
+    def _knn_search(
+        self,
+        node: KDTreeNode,
+        query: np.ndarray,
+        k: int,
+        heap: List[Tuple[float, int]],
+    ) -> None:
+        if node is None:
+            return
+
+        # update the k best candidates with the point of this node.
+        point = self.coords[node.index]
+        dist = float(np.sqrt(np.sum((point - query) ** 2)))
+        if len(heap) < k:
+            heapq.heappush(heap, (-dist, node.index))
+        elif dist < -heap[0][0]:
+            heapq.heapreplace(heap, (-dist, node.index))
+
+        # signed distance from the query to the splitting plane.
+        axis = node.axis
+        diff = query[axis] - point[axis]
+        near, far = (
+            (node.left, node.right) if diff < 0 else (node.right, node.left)
+        )
+
+        # always search the near side first.
+        self._knn_search(near, query, k, heap)
+        # search the far side only if it may contain a closer point, i.e. the
+        # splitting plane is closer than the current k-th neighbor.
+        if len(heap) < k or abs(diff) < -heap[0][0]:
+            self._knn_search(far, query, k, heap)
+
+
 def boundaries_to_lines(
     min_corners: np.ndarray, max_corners: np.ndarray
 ) -> np.ndarray:
